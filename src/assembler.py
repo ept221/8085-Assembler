@@ -376,7 +376,7 @@ def firstPass(lines,symbols,code):
     # particular grammer
 
     # Recall the format for a line: [[Line_number, Program_Counter] [body] [comment]]
-
+    print(lines)
     for line in lines:
         index = 0
         if(line[1]):
