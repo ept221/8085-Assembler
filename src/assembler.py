@@ -371,7 +371,6 @@ def parse_mnemonic(line, index, code):
 # Passes
                
 def firstPass(lines,symbols,code):
-    print(lines)
     # Figures what type of statement we have based the first few words in a line of lines
     # Then it calls a particular parser to parese the rest of the command against a
     # particular grammer
