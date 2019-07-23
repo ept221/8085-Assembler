@@ -1,6 +1,8 @@
 Grammar:
 
-<line> ::= <lbl_def> [<code>] | [<lbl_def>] <code>
+<line> ::= <lbl_def> [<drct>] [<code>]
+         | [<lbl_def>] <drct> [<code>]
+         | [<lbl_def>] [<drct>] <code>
 
 <code> ::= <mnm_0>
          | <mnm_0_e> <expr>
@@ -8,11 +10,16 @@ Grammar:
          | <mnm_1_e> <arg> "," <expr>
          | <mnm_2> <arg> "," <arg>
 
-<expr> ::= <term> { <bin_op> <term>}
+<expr> ::= <term> { <bin_op> <term> }
 
-<term> ::= { <ury_op> } <val>
+<term> ::= { <ury_op> } <numb>
 
-<numb> ::= <8int> | <16int> | <symbol>
+<drct> ::= <drct_1> ( <08nm> | <16nm> )
+         | <drct_+> { <08nm> "," } <08nm>
+         | <symbol> <drct_w> <expr>
+
+<numb> := <08nm> | <16nm> | <symbol>
+
 
 ------------------------------------------------------
 Example:
@@ -28,6 +35,12 @@ Foo:       MVI A, FF
         <mnm_1_e>-----<arg>---","---<expr>
             |          |       |      |
            MVI         A       ,      |
+                                    <term>
+                                      |
+                                      |
+                                    <numb>
+                                      |
+                                      |
                                     <8int>
                                       |
                                       FF
