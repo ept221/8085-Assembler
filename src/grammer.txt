@@ -4,7 +4,7 @@
 <code> ::= <mnm_0>
          | <mnm_0_e> <expr>
          | <mnm_1> <arg>
-         | <mnm_1_e> <arg> <exp>
+         | <mnm_1_e> <arg> <expr>
          | <mnm_2> <arg> <arg>
 
 <expr> ::= <8int> | <16int> | <symbol>
@@ -29,18 +29,11 @@ Foo:       MVI A, FF
               |
               |
 <lbl_def>-------------<code>
-                        |
-                        |
-                    <mnm_1_e>
-                        |
-                        |
-                      <arg>
-                        |
-                        |
-                      <expr>
-                        |
-                        |
-                      <8int>
-                        
-
-                        
+    |                  |
+  Foo:                 |
+        <mnm_1_e>-----<arg>------<expr>
+            |          |            |
+           MVI         A,           |
+                                 <8int>
+                                    |
+                                    FF
