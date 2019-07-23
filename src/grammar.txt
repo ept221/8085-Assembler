@@ -1,0 +1,33 @@
+Grammar:
+
+<line> ::= <lbl_def> [<code>] | [<lbl_def>] <code>
+
+<code> ::= <mnm_0>
+         | <mnm_0_e> <expr>
+         | <mnm_1> <arg>
+         | <mnm_1_e> <arg> "," <expr>
+         | <mnm_2> <arg> "," <arg>
+
+<expr> ::= <term> { <bin_op> <term>}
+
+<term> ::= { <ury_op> } <val>
+
+<numb> ::= <8int> | <16int> | <symbol>
+
+------------------------------------------------------
+Example:
+
+Foo:       MVI A, FF
+
+            <line>
+              |
+              |
+<lbl_def>------------<code>
+    |                  |
+  Foo:                 |
+        <mnm_1_e>-----<arg>---","---<expr>
+            |          |       |      |
+           MVI         A       ,      |
+                                    <8int>
+                                      |
+                                      FF
