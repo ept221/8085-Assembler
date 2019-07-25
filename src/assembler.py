@@ -117,6 +117,7 @@ def classify(words):
     tags = []
     stripped_words = list(map(str.strip, words))
     for word in stripped_words:
+        word.strip()
         if(word == ","):
             tags.append("comma")
             
@@ -469,6 +470,57 @@ def output(code, name):
     if f is not sys.stdout:
         f.close()
 ##############################################################################################################
+# Experimental
+
+def lexer(lines):
+    for line in lines:
+        if(len(line[1]) != 0):
+            tokens = []
+            for word in line[1]:
+                word = word.strip()
+                if word in table.mnm_0:
+                    tokens.append(["mnm_0", word])
+                elif word in table.mnm_0_e:
+                    tokens.append(["mnm_0_e", word])
+                elif word in table.mnm_1:
+                    tokens.append(["mnm_1", word])
+                elif word in table.mnm_1_e:
+                    tokens.append(["mnm_1_e", word])
+                elif word in table.mnm_2:
+                    tokens.append(["mnm_2", word])
+                elif word in table.arg:
+                    tokens.append(["arg", word])
+                elif word == ",":
+                    tokens.append(["comma", word])
+                elif word == "+":
+                    tokens.append(["plus", word])
+                elif word == "-":
+                    tokens.append(["minus", word])
+                elif word in table.drct_1:
+                    tokens.append(["drct_1", word])
+                elif word in table.drct_p:
+                    tokens.append(["drct_p", word])
+                elif word in table.drct_w:
+                    tokens.append(["drct_w", word])
+                elif re.match(r'^.+:$',word):
+                    tokens.append(["lbl_def", word])
+                elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$',word)):
+                    tokens.append(["[xxxx]", word])
+                elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$',word)):
+                    tokens.append(["[xx]", word])
+                elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$',word)):
+                    tokens.append(["symbol", word])
+                else:
+                    tokens.append(["idk_man ", word])
+            print(tokens)
+
+class Node:
+    
+     def __init__(self, kind, data):
+        self.kind = kind
+        self.data = data
+
+##############################################################################################################
 # Main program
 
 code = Code()
@@ -484,6 +536,7 @@ if(len(sys.argv) == 3):
 else:
     inFile = "program.asm"
 
-firstPass(read(inFile),symbols,code)
-secondPass(symbols,code)
-output(code,outFile)
+lexer(read(inFile))
+a = []
+a.append(Node("line","some data"))
+

@@ -15,10 +15,19 @@ Grammar:
 <term> ::= { <ury_op> } <numb>
 
 <drct> ::= <drct_1> ( <08nm> | <16nm> )
-         | <drct_+> { <08nm> "," } <08nm>
+         | <drct_p> { <08nm> "," } <08nm>
          | <symbol> <drct_w> <expr>
 
 <numb> := <08nm> | <16nm> | <symbol>
+
+------------------------------------------------------
+Parser:
+
+def parse_line(lines):
+    for(line in lines):
+        parse_lbl_def(line):
+        if():
+        
 
 
 ------------------------------------------------------
