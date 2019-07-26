@@ -473,52 +473,106 @@ def output(code, name):
 # Experimental
 
 def lexer(lines):
+    tokens = []
     for line in lines:
         if(len(line[1]) != 0):
-            tokens = []
             for word in line[1]:
                 word = word.strip()
                 if word in table.mnm_0:
-                    tokens.append(["mnm_0", word])
+                    tokens.append(["<mnm_0>", word])
                 elif word in table.mnm_0_e:
-                    tokens.append(["mnm_0_e", word])
+                    tokens.append(["<mnm_0_e>", word])
                 elif word in table.mnm_1:
-                    tokens.append(["mnm_1", word])
+                    tokens.append(["<mnm_1>", word])
                 elif word in table.mnm_1_e:
-                    tokens.append(["mnm_1_e", word])
+                    tokens.append(["<mnm_1_e>", word])
                 elif word in table.mnm_2:
-                    tokens.append(["mnm_2", word])
+                    tokens.append(["<mnm_2>", word])
                 elif word in table.arg:
-                    tokens.append(["arg", word])
+                    tokens.append(["<arg>", word])
                 elif word == ",":
-                    tokens.append(["comma", word])
+                    tokens.append(["<comma>", word])
                 elif word == "+":
-                    tokens.append(["plus", word])
+                    tokens.append(["<plus>", word])
                 elif word == "-":
-                    tokens.append(["minus", word])
+                    tokens.append(["<minus>", word])
                 elif word in table.drct_1:
-                    tokens.append(["drct_1", word])
+                    tokens.append(["<drct_1>", word])
                 elif word in table.drct_p:
-                    tokens.append(["drct_p", word])
+                    tokens.append(["<drct_p>", word])
                 elif word in table.drct_w:
-                    tokens.append(["drct_w", word])
+                    tokens.append(["<drct_w>", word])
                 elif re.match(r'^.+:$',word):
-                    tokens.append(["lbl_def", word])
+                    tokens.append(["<lbl_def>", word])
                 elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$',word)):
-                    tokens.append(["[xxxx]", word])
+                    tokens.append(["<16nm>", word])
                 elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$',word)):
-                    tokens.append(["[xx]", word])
+                    tokens.append(["<08nm>", word])
                 elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$',word)):
                     tokens.append(["symbol", word])
                 else:
-                    tokens.append(["idk_man ", word])
-            print(tokens)
+                    tokens.append(["<idk_man>", word])
+    return tokens
 
 class Node:
     
-     def __init__(self, kind, data):
+     def __init__(self, kind):
         self.kind = kind
-        self.data = data
+
+# <line> ::= <lbl_def> [<drct>] [<code>]
+#          | [<lbl_def>] <drct> [<code>]
+#          | [<lbl_def>] [<drct>] <code>
+
+# <code> ::= <mnm_0>
+#          | <mnm_0_e> <expr>
+#          | <mnm_1> <arg>
+#          | <mnm_1_e> <arg> "," <expr>
+#          | <mnm_2> <arg> "," <arg>
+
+# <expr> ::= <term> { <bin_op> <term> }
+
+# <term> ::= { <ury_op> } <numb>
+
+# <drct> ::= <drct_1> ( <08nm> | <16nm> )
+#          | <drct_p> { <08nm> "," } <08nm>
+#          | <symbol> <drct_w> <expr>
+
+# <numb> := <08nm> | <16nm> | <symbol>
+
+def parse(tokens):
+    tree = []
+    while(len(tokens))
+        parse_line(tokens, tree)
+
+def parse_line(tokens, tree):
+# <line> ::= <lbl_def> [<drct>] [<code>]
+#          | [<lbl_def>] <drct> [<code>]
+#          | [<lbl_def>] [<drct>] <code>
+
+    ###############################
+    lbl_def = parse_lbl_def(tokens, tree)
+    if(lbl_def):
+        if(lbl_def = "<error>"):
+            return
+        else:
+            tree.append(code)
+    ###############################
+    drct = parse_drct(tokens, tree)
+    if(drct):
+        if(drct.kind = "<error>"):
+            return
+        else:
+            tree.append(drct)
+    ###############################
+    code = parse_code(tokens, tree)
+    if(code):
+        if(code.kind == "<error>"):
+            return
+        else:
+            tree.append(code)
+    ###############################
+    for node in tree:
+        print(node.kind)
 
 ##############################################################################################################
 # Main program
@@ -536,7 +590,7 @@ if(len(sys.argv) == 3):
 else:
     inFile = "program.asm"
 
-lexer(read(inFile))
-a = []
-a.append(Node("line","some data"))
+parse(lexer(read(inFile)))
+
+
 
