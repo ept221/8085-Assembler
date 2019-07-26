@@ -1,8 +1,8 @@
 Grammar:
 
 <line> ::= <lbl_def> [<drct>] [<code>]
-         | [<lbl_def>] <drct> [<code>]
-         | [<lbl_def>] [<drct>] <code>
+         | <drct> [<code>]
+         | <code>
 
 <code> ::= <mnm_0>
          | <mnm_0_e> <expr>
