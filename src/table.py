@@ -79,7 +79,6 @@ mnm_1 = {
     'PUSH',
     'POP',
     'RST',
-    'RST',
     'INR',
     'DCR',
     'INX',
@@ -117,7 +116,7 @@ drct_w = {
 	'EQU'
 }
 
-arg = {
+reg = {
     'A',
     'B',
     'C',

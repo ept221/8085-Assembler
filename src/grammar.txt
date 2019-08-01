@@ -6,9 +6,9 @@ Grammar:
 
 <code> ::= <mnm_0>
          | <mnm_0_e> <expr>
-         | <mnm_1> <arg>
-         | <mnm_1_e> <arg> "," <expr>
-         | <mnm_2> <arg> "," <arg>
+         | <mnm_1> <reg>
+         | <mnm_1_e> <reg> "," <expr>
+         | <mnm_2> <reg> "," <reg>
 
 <expr> ::= <term> { <bin_op> <term> }
 
@@ -41,7 +41,7 @@ Foo:       MVI A, FF
 <lbl_def>------------<code>
     |                  |
   Foo:                 |
-        <mnm_1_e>-----<arg>---","---<expr>
+        <mnm_1_e>-----<reg>---","---<expr>
             |          |       |      |
            MVI         A       ,      |
                                     <term>

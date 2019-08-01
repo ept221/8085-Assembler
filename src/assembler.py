@@ -113,62 +113,6 @@ def error(message, line):
 ##############################################################################################################
 # Directive functions
 
-def classify(words):
-    tags = []
-    stripped_words = list(map(str.strip, words))
-    for word in stripped_words:
-        word.strip()
-        if(word == ","):
-            tags.append("comma")
-            
-        elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$',word)):
-            tags.append("[xxxx]")
-            
-        elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$',word)):
-            tags.append("[xx]")
-            
-        elif(re.match(r'^[A-Za-z_]+$', word)):
-            tags.append("symbol")
-
-        elif(word == "$"):
-            tags.append("lc")
-
-        elif(word == '+' or word == '-'):
-        	tags.append("operator")
-            
-        else:
-            tags.append("bad")
-    return tags
-
-def parse_directive(line, index, directive, symbols, code):
-    
-    pc = line[0][1]
-
-    if(directive[3] == "EQU"):
-        argList = line[1][index:index + 1] + line[1][index + 2:]
-    else:
-        argList = line[1][index + 1:]
-
-    tags_with_comma = classify(argList)
-    tags = [x for x in tags_with_comma if x != ","]
-
-    args_with_comma = list(map(str.strip, argList))
-    args = [x for x in args_with_comma if x != ","]
-
-    argNum = len(args)
-
-    if(directive[1] != -1 and argNum < directive[1]):
-        error("Directive missing argument!",line)
-        return
-
-    elif(directive[2] != -1 and argNum > directive[2]):
-        error("Directive has too many arguments!",line)
-        return
-
-    else:
-        directive[0](line, tags_with_comma, tags, args_with_comma, args, symbols, code)
-
-
 def org(line, tags_with_comma, tags, args_with_comma, args, symbols, code):
 
     if(tags[0] == "[xx]" or tags[0] == "[xxxx]"):
@@ -475,53 +419,51 @@ def output(code, name):
 def lexer(lines):
     tokens = []
     for line in lines:
+        pc = line[0][1]
         if(len(line[1]) != 0):
             for word in line[1]:
                 word = word.strip()
                 if word in table.mnm_0:
-                    tokens.append(["<mnm_0>", word])
+                    tokens.append(["<mnm_0>", word, pc])
                 elif word in table.mnm_0_e:
-                    tokens.append(["<mnm_0_e>", word])
+                    tokens.append(["<mnm_0_e>", word, pc])
                 elif word in table.mnm_1:
-                    tokens.append(["<mnm_1>", word])
+                    tokens.append(["<mnm_1>", word, pc])
                 elif word in table.mnm_1_e:
-                    tokens.append(["<mnm_1_e>", word])
+                    tokens.append(["<mnm_1_e>", word, pc])
                 elif word in table.mnm_2:
-                    tokens.append(["<mnm_2>", word])
-                elif word in table.arg:
-                    tokens.append(["<arg>", word])
+                    tokens.append(["<mnm_2>", word, pc])
+                elif word in table.reg:
+                    tokens.append(["<reg>", word, pc])
                 elif word == ",":
-                    tokens.append(["<comma>", word])
+                    tokens.append(["<comma>", word, pc])
                 elif word == "+":
-                    tokens.append(["<plus>", word])
+                    tokens.append(["<plus>", word, pc])
                 elif word == "-":
-                    tokens.append(["<minus>", word])
+                    tokens.append(["<minus>", word, pc])
                 elif word in table.drct_1:
-                    tokens.append(["<drct_1>", word])
+                    tokens.append(["<drct_1>", word, pc])
                 elif word in table.drct_p:
-                    tokens.append(["<drct_p>", word])
+                    tokens.append(["<drct_p>", word, pc])
                 elif word in table.drct_w:
-                    tokens.append(["<drct_w>", word])
+                    tokens.append(["<drct_w>", word, pc])
                 elif re.match(r'^.+:$',word):
-                    tokens.append(["<lbl_def>", word])
-                elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$',word)):
-                    tokens.append(["<16nm>", word])
-                elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$',word)):
-                    tokens.append(["<08nm>", word])
-                elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$',word)):
-                    tokens.append(["symbol", word])
+                    tokens.append(["<lbl_def>", word, pc])
+                elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
+                    tokens.append(["<16nm>", word, pc])
+                elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
+                    tokens.append(["<08nm>", word, pc])
+                elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
+                    tokens.append(["symbol", word, pc])
                 else:
-                    tokens.append(["<idk_man>", word])
+                    tokens.append(["<idk_man>", word, pc])
+    print("tokens: ")
+    print(tokens)
     return tokens
 
-class Node:
-    
-     def __init__(self, kind):
-        self.kind = kind
-
 # <line> ::= <lbl_def> [<drct>] [<code>]
-#          | [<lbl_def>] <drct> [<code>]
-#          | [<lbl_def>] [<drct>] <code>
+#          | <drct> [<code>]
+#          | <code>
 
 # <code> ::= <mnm_0>
 #          | <mnm_0_e> <expr>
@@ -541,39 +483,103 @@ class Node:
 
 def parse(tokens):
     tree = []
-    while(len(tokens))
-        parse_line(tokens, tree)
+    while(len(tokens)):
+        tree.append(parse_line(tokens))
 
-def parse_line(tokens, tree):
-# <line> ::= <lbl_def> [<drct>] [<code>]
-#          | [<lbl_def>] <drct> [<code>]
-#          | [<lbl_def>] [<drct>] <code>
-
-    ###############################
-    lbl_def = parse_lbl_def(tokens, tree)
-    if(lbl_def):
-        if(lbl_def = "<error>"):
-            return
-        else:
-            tree.append(code)
-    ###############################
-    drct = parse_drct(tokens, tree)
-    if(drct):
-        if(drct.kind = "<error>"):
-            return
-        else:
-            tree.append(drct)
-    ###############################
-    code = parse_code(tokens, tree)
-    if(code):
-        if(code.kind == "<error>"):
-            return
-        else:
-            tree.append(code)
-    ###############################
+    print("tree:")
     for node in tree:
-        print(node.kind)
+        print(node)
 
+def parse_lbl_def(tokens):
+    if not tokens:
+        return 0
+    if(tokens[0][0] == "<lbl_def>"):
+        return tokens.pop(0)
+    else:
+        return 0
+
+def parse_drct_1(tokens):
+    if not tokens:
+        return 0
+    else:
+        if(tokens[0][1] in table.drct_1):
+            return tokens.pop(0)
+        else:
+            return 0
+
+def parse_drct(tokens):
+    data = ["<drct>"]
+    error = ["<error>"]
+
+    if not tokens:
+        return 0
+    ################################
+    # [drct_1]
+    drct_1 = parse_drct_1(tokens)
+    if(drct_1):
+        if(drct_1 == error):
+            return error
+        data.append(drct_1)
+        if(tokens):
+            t = tokens.pop(0)
+            if(t[0] == "<08nm>" or t[0] == "<16nm>"):
+                data.append(t)
+                return data
+            else:
+                return error
+        else:
+            return error
+    ################################
+
+def parse_code(tokens):
+    if(len(tokens) == 0):
+        return 0
+    else:
+        return 0
+
+def parse_line(tokens):
+    data = ["<line>"]
+    error = ["<error>"]
+    if(len(tokens) == 0):
+        return 0
+    # Grammar:
+    # <line> ::= <lbl_def> [<drct>] [<code>]
+    #          | <drct> [<code>]
+    #          | <code>
+    #
+    # This can be checked simply by making sure
+    # that there is at least a <lbl_def>, or a
+    # <drct>, or a <code> node
+
+    ################################
+    # [lbl_def]
+    lbl_def = parse_lbl_def(tokens)
+    if(lbl_def):
+        if(lbl_def == error):
+            return error
+        data.append(lbl_def)
+    ################################
+    # [drct]
+    drct = parse_drct(tokens)
+    if(drct):
+        if(drct == error):
+            return error
+        data.append(drct)
+    ################################
+    # [code]
+    code = parse_code(tokens)
+    if(code):
+        if(code == error):
+            return error
+        data.append(drct)
+    ###############################
+    # check to see that we have at
+    # least one of lbl_def, drct,
+    # or code
+    if(len(data)):
+        return data
+    tokens.pop(0)
+    return error
 ##############################################################################################################
 # Main program
 
@@ -588,9 +594,7 @@ if(len(sys.argv) == 3):
     inFile = sys.argv[1]
     outFile = sys.argv[2]
 else:
-    inFile = "program.asm"
+    inFile = "pgm.asm"
 
 parse(lexer(read(inFile)))
-
-
 
