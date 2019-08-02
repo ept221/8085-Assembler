@@ -474,12 +474,12 @@ def lexer(lines):
 #          | <mnm_1_e> <arg> "," <expr>
 #          | <mnm_2> <arg> "," <arg>
 
-# <expr> ::= <term> { <bin_op> <term> }
+# <expr> ::= [ <op> ] <numb> { <op> <numb> }
 
 # <term> ::= { <ury_op> } <numb>
 
 # <drct> ::= <drct_1> ( <08nm> | <16nm> )
-#          | <drct_p> { <08nm> "," } <08nm>
+#          | <drct_p> <08nm> { ","  <08nm> }
 #          | <symbol> <drct_w> <expr>
 
 # <numb> := <08nm> | <16nm> | <symbol>
@@ -501,58 +501,74 @@ def parse_lbl_def(tokens):
     else:
         return 0
 
-def parse_drct_1(tokens):
-    if not tokens:
-        return 0
-    else:
-        if(tokens[0][1] in table.drct_1):
-            return tokens.pop(0)
-        else:
-            return 0
-
-def parse_drct_p(tokens):
-    if not tokens:
-        return 0
-    else:
-        if(tokens[0][1] in table.drct_p):
-            return tokens.pop(0)
-        else:
-            return 0
-
+######################################################
 def parse_drct(tokens):
     data = ["<drct>"]
     error = ["<error>"]
-
     if not tokens:
         return 0
-    ################################
+    ##################################################
     # [drct_1]
-    drct_1 = parse_drct_1(tokens)
-    if(drct_1):
-        if(drct_1 == error):
-            return error
-        data.append(drct_1)
-        if(tokens):
-            t = tokens.pop(0)
-            if(t[0] == "<08nm>" or t[0] == "<16nm>"):
-                data.append(t)
-                return data
-            else:
-                print("Directive has bad argument!")
-                return error
-        else:
+    if(tokens[0][0] == "<drct_1>"):
+        data.append(tokens.pop(0))
+        if(not tokens):
             print("Directive missing argument!")
             return error
-    ################################
+        if(tokens[0][0] != "<08nm>" and tokens[0][0] != "<16nm>"):
+            print("Directive has bad argument!")
+            return error
+        data.append(tokens.pop(0))
+        return data
+    ##################################################
     # [drct_p]
-    #drct_p = parse_drct_p(tokens)
-    #if(drct_p):
-    #    if(drct_p == error):
-    #        return error
-    #    data.append(drct_p)
-    #    if(tokens):
-    #        t = tokens.pop(0)
+    elif(tokens[0][0] == "<drct_p>"):
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("Directive missing argument!")
+            return error
+        if(tokens[0][0] != "<08nm>"):
+            print("Directive has bad argument!")
+        data.append(tokens.pop(0))
+        while(tokens):
+            if(tokens[0][0] != "<comma>"):
+                if(tokens[0][0] != "<08nm>"):
+                    print("Directive has bad argument!")
+                    return error
+                print("Missing comma!")
+            data.append(tokens.pop(0))
+            if(not tokens):
+                print("Directive missing last argument or has extra comma!")
+                return error
+            if(tokens[0][0] != "<08nm>"):
+                if(tokens[0][0] != "<comma>"):
+                    print("Directive has bad argument!")
+                    return error
+                print("Directive missing arguments!")
+                return error
+            data.append(tokens.pop(0))
+        return data
+    ##################################################
+    # [drct_w]
+    elif(tokens[0][0] == "<symbol>"):
+        data.append(tokens.pop(0))
+        if(not tokens or tokens[0][0] != "<drct_w>"):
+            print("Bad Identifier!")
+            return error
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("Directive missing argument!")
+            return error
+        if((tokens[0][0] != "<08nm>") and (tokens[0][0] != "<16nm>") and (tokens[0][0] != "<symbol>")):
+            print("Directive has bad argument!")
+            return error
+        data.append(tokens.pop(0))
+        return data
+    elif(tokens[0][0] == "<drct_w>"):
+        print("Directive missing initial argument!")
+        return error
 
+    return 0
+######################################################
 
 def parse_code(tokens):
     if(len(tokens) == 0):
@@ -565,15 +581,6 @@ def parse_line(tokens):
     error = ["<error>"]
     if(len(tokens) == 0):
         return 0
-    # Grammar:
-    # <line> ::= <lbl_def> [<drct>] [<code>]
-    #          | <drct> [<code>]
-    #          | <code>
-    #
-    # This can be checked simply by making sure
-    # that there is at least a <lbl_def>, or a
-    # <drct>, or a <code> node
-
     ################################
     # [lbl_def]
     lbl_def = parse_lbl_def(tokens)
@@ -600,13 +607,19 @@ def parse_line(tokens):
     # least one of lbl_def, drct,
     # or code
     if(len(data) < 2):
-        #tokens.pop(0)
-        print("Bad initial identifier!")
+        tokens.pop(0)
+        print("Bad Initial Identifier!")
         return error
     ###############################
     # check to see if we have any
     # tokens left
+    if(len(tokens)):   
+        print("Bad Identifier!")
+        return error
+    ###############################
+    # everything's good
     return data
+
 ##############################################################################################################
 # Main program
 

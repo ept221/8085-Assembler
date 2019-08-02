@@ -10,12 +10,10 @@ Grammar:
          | <mnm_1_e> <reg> "," <expr>
          | <mnm_2> <reg> "," <reg>
 
-<expr> ::= <term> { <bin_op> <term> }
-
-<term> ::= { <ury_op> } <numb>
+<expr> ::= [<op>] <numb> { <op> <numb> }
 
 <drct> ::= <drct_1> ( <08nm> | <16nm> )
-         | <drct_p> { <08nm> "," } <08nm>
+         | <drct_p> <08nm> { ","  <08nm> }
          | <symbol> <drct_w> <expr>
 
 <numb> := <08nm> | <16nm> | <symbol>
