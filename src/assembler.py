@@ -416,49 +416,52 @@ def output(code, name):
 ##############################################################################################################
 # Experimental
 
+#for lineNumber, line in enumerate(file, start = 1):
+[]
 def lexer(lines):
     tokens = []
+    i = 0
     for line in lines:
         pc = line[0][1]
         if(len(line[1]) != 0):
+            tokens.append([])
             for word in line[1]:
                 word = word.strip()
                 if word in table.mnm_0:
-                    tokens.append(["<mnm_0>", word, pc])
+                    tokens[i].append(["<mnm_0>", word, pc])
                 elif word in table.mnm_0_e:
-                    tokens.append(["<mnm_0_e>", word, pc])
+                    tokens[i].append(["<mnm_0_e>", word, pc])
                 elif word in table.mnm_1:
-                    tokens.append(["<mnm_1>", word, pc])
+                    tokens[i].append(["<mnm_1>", word, pc])
                 elif word in table.mnm_1_e:
-                    tokens.append(["<mnm_1_e>", word, pc])
+                    tokens[i].append(["<mnm_1_e>", word, pc])
                 elif word in table.mnm_2:
-                    tokens.append(["<mnm_2>", word, pc])
+                    tokens[i].append(["<mnm_2>", word, pc])
                 elif word in table.reg:
-                    tokens.append(["<reg>", word, pc])
+                    tokens[i].append(["<reg>", word, pc])
                 elif word == ",":
-                    tokens.append(["<comma>", word, pc])
+                    tokens[i].append(["<comma>", word, pc])
                 elif word == "+":
-                    tokens.append(["<plus>", word, pc])
+                    tokens[i].append(["<plus>", word, pc])
                 elif word == "-":
-                    tokens.append(["<minus>", word, pc])
+                    tokens[i].append(["<minus>", word, pc])
                 elif word in table.drct_1:
-                    tokens.append(["<drct_1>", word, pc])
+                    tokens[i].append(["<drct_1>", word, pc])
                 elif word in table.drct_p:
-                    tokens.append(["<drct_p>", word, pc])
+                    tokens[i].append(["<drct_p>", word, pc])
                 elif word in table.drct_w:
-                    tokens.append(["<drct_w>", word, pc])
+                    tokens[i].append(["<drct_w>", word, pc])
                 elif re.match(r'^.+:$',word):
-                    tokens.append(["<lbl_def>", word, pc])
+                    tokens[i].append(["<lbl_def>", word, pc])
                 elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
-                    tokens.append(["<16nm>", word, pc])
+                    tokens[i].append(["<16nm>", word, pc])
                 elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
-                    tokens.append(["<08nm>", word, pc])
+                    tokens[i].append(["<08nm>", word, pc])
                 elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
-                    tokens.append(["symbol", word, pc])
+                    tokens[i].append(["<symbol>", word, pc])
                 else:
-                    tokens.append(["<idk_man>", word, pc])
-    print("tokens: ")
-    print(tokens)
+                    tokens[i].append(["<idk_man>", word, pc])
+            i += 1
     return tokens
 
 # <line> ::= <lbl_def> [<drct>] [<code>]
@@ -481,14 +484,14 @@ def lexer(lines):
 
 # <numb> := <08nm> | <16nm> | <symbol>
 
-def parse(tokens):
+def parse(token_lines):
     tree = []
-    while(len(tokens)):
+    for tokens in token_lines:
         tree.append(parse_line(tokens))
 
     print("tree:")
-    for node in tree:
-        print(node)
+    for l in tree:
+        print(l)
 
 def parse_lbl_def(tokens):
     if not tokens:
@@ -503,6 +506,15 @@ def parse_drct_1(tokens):
         return 0
     else:
         if(tokens[0][1] in table.drct_1):
+            return tokens.pop(0)
+        else:
+            return 0
+
+def parse_drct_p(tokens):
+    if not tokens:
+        return 0
+    else:
+        if(tokens[0][1] in table.drct_p):
             return tokens.pop(0)
         else:
             return 0
@@ -526,10 +538,21 @@ def parse_drct(tokens):
                 data.append(t)
                 return data
             else:
+                print("Directive has bad argument!")
                 return error
         else:
+            print("Directive missing argument!")
             return error
     ################################
+    # [drct_p]
+    #drct_p = parse_drct_p(tokens)
+    #if(drct_p):
+    #    if(drct_p == error):
+    #        return error
+    #    data.append(drct_p)
+    #    if(tokens):
+    #        t = tokens.pop(0)
+
 
 def parse_code(tokens):
     if(len(tokens) == 0):
@@ -576,10 +599,14 @@ def parse_line(tokens):
     # check to see that we have at
     # least one of lbl_def, drct,
     # or code
-    if(len(data)):
-        return data
-    tokens.pop(0)
-    return error
+    if(len(data) < 2):
+        #tokens.pop(0)
+        print("Bad initial identifier!")
+        return error
+    ###############################
+    # check to see if we have any
+    # tokens left
+    return data
 ##############################################################################################################
 # Main program
 
