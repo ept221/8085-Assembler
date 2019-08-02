@@ -135,4 +135,4 @@ LOOP3:      DCR D
             ORG F4          
 TurnDir:    DB 3C
             
-            MVI A, FOO + 5
+            MVI A, FOO

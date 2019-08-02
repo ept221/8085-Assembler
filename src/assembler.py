@@ -429,6 +429,8 @@ def lexer(lines):
                 word = word.strip()
                 if word in table.mnm_0:
                     tokens[i].append(["<mnm_0>", word, pc])
+                elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
+                    tokens[i].append(["<08nm>", word, pc])
                 elif word in table.mnm_0_e:
                     tokens[i].append(["<mnm_0_e>", word, pc])
                 elif word in table.mnm_1:
@@ -455,8 +457,6 @@ def lexer(lines):
                     tokens[i].append(["<lbl_def>", word, pc])
                 elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
                     tokens[i].append(["<16nm>", word, pc])
-                elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
-                    tokens[i].append(["<08nm>", word, pc])
                 elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
                     tokens[i].append(["<symbol>", word, pc])
                 else:
@@ -470,9 +470,9 @@ def lexer(lines):
 
 # <code> ::= <mnm_0>
 #          | <mnm_0_e> <expr>
-#          | <mnm_1> <arg>
-#          | <mnm_1_e> <arg> "," <expr>
-#          | <mnm_2> <arg> "," <arg>
+#          | <mnm_1> <reg>
+#          | <mnm_1_e> <reg> "," <expr>
+#          | <mnm_2> <reg> "," <reg>
 
 # <expr> ::= [ <op> ] <numb> { <op> <numb> }
 
@@ -514,7 +514,7 @@ def parse_drct(tokens):
         if(not tokens):
             print("Directive missing argument!")
             return error
-        if(tokens[0][0] != "<08nm>" and tokens[0][0] != "<16nm>"):
+        if(tokens[0][0] not in {"<08nm>", "<16nm>"}):
             print("Directive has bad argument!")
             return error
         data.append(tokens.pop(0))
@@ -558,7 +558,7 @@ def parse_drct(tokens):
         if(not tokens):
             print("Directive missing argument!")
             return error
-        if((tokens[0][0] != "<08nm>") and (tokens[0][0] != "<16nm>") and (tokens[0][0] != "<symbol>")):
+        if((tokens[0][0] not in {"<08nm>", "16nm", "symbol"})):
             print("Directive has bad argument!")
             return error
         data.append(tokens.pop(0))
@@ -571,10 +571,101 @@ def parse_drct(tokens):
 ######################################################
 
 def parse_code(tokens):
-    if(len(tokens) == 0):
+    data = ["<code>"]
+    error = ["<error>"]
+    if not tokens:
         return 0
-    else:
-        return 0
+    ##################################################
+    # [mnm_0]
+    if(tokens[0][0] == "<mnm_0>"):
+        data.append(tokens.pop(0))
+        return data
+    ##################################################
+    # [mnm_0_e]
+    elif(tokens[0][0] in {"<mnm_0_e>", "<08nm>"}):
+        if(tokens[0][0] == "<08nm>" and tokens[0][1] == "CC"):
+            tokens[0][0] = "<mnm_0_e>"
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("Instruction missing argument!")
+            return error
+        if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
+            print("Instruction has bad argument!")
+            return error
+        data.append(tokens.pop(0))
+        return data
+    ##################################################
+    # [mnm_1]
+    elif(tokens[0][0] == "<mnm_1>"):
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("Instruction missing register/register-pair")
+            return error
+        if(tokens[0][0] != "<reg>"):
+            print("Instruction has bad register/register-pair")
+            return error
+        data.append(tokens.pop(0))
+        return data
+    ##################################################
+    # [mnm_1_e]
+    elif(tokens[0][0] == "<mnm_1_e>"):
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("Instruction missing register/register-pair!")
+            return error
+        if(tokens[0][0] != "<reg>"):
+            print("Instruction has bad register/register-pair!")
+            return error
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("instruction missing comma and argument!")
+            return error
+        if(tokens[0][0] != "<comma>"):
+            if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
+                print("Instruction has bad argument!")
+                return error
+            print("Instruction missing comma!")
+            return error
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("Instruction missing argument!")
+            return error
+        if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
+            print("Instruction has bad argument!")
+            return error
+        data.append(tokens.pop(0))
+        return data
+    ##################################################
+    # [mnm_2]
+    elif(tokens[0][0] == "<mnm_2>"):
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("Instruction missing register/register-pair!")
+            return error
+        if(tokens[0][0] != "<reg>"):
+            print("Instruction has bad register/register-pair!")
+            return error
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("instruction missing comma and argument!")
+            return error
+        if(tokens[0][0] != "<comma>"):
+            if(tokens[0][0] != "<reg>"):
+                print("Instruction has bad register/register-pair!")
+                return
+            print("Instruction missing comma!")
+            return error
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("Instruction missing register/register-pair!")
+            return error
+        if(tokens[0][0] != "<reg>"):
+            print("Instruction has bad register/register-pair!")
+            return error
+        data.append(tokens.pop(0))
+        return data
+
+    return 0
 
 def parse_line(tokens):
     data = ["<line>"]
@@ -601,7 +692,7 @@ def parse_line(tokens):
     if(code):
         if(code == error):
             return error
-        data.append(drct)
+        data.append(code)
     ###############################
     # check to see that we have at
     # least one of lbl_def, drct,
@@ -634,7 +725,7 @@ if(len(sys.argv) == 3):
     inFile = sys.argv[1]
     outFile = sys.argv[2]
 else:
-    inFile = "pgm.asm"
+    inFile = "program.asm"
 
 parse(lexer(read(inFile)))
 
