@@ -90,7 +90,7 @@ def read(name):
 
             block.append([lineNumber, pc])
             if(rest):
-                split_rest = re.split(r'([,\s]\s*)', rest)
+                split_rest = re.split(r'([-+,\s]\s*)', rest)
                 split_rest = [word for word in split_rest if not re.match(r'^\s*$',word)]
                 split_rest = list(filter(None, split_rest))
                 block.append(split_rest)
@@ -149,7 +149,7 @@ def db(line, tags_with_comma, tags, args_with_comma, args, symbols, code):
             if(tags_with_comma[i] == "[xx]"):
                 code.write(int(args_with_comma[i],base = 16),line,instrct="DB")
             elif(tags_with_comma[i] == "symbol"):
-            	code.write("D_"+args_with_comma[i],line, instrct = "DB", mode="symbol")
+                code.write("D_"+args_with_comma[i],line, instrct = "DB", mode="symbol")
             elif(tags_with_comma[i] == "comma"):
                 error("Directive has bad comma!",line)
                 return
@@ -417,7 +417,6 @@ def output(code, name):
 # Experimental
 
 #for lineNumber, line in enumerate(file, start = 1):
-[]
 def lexer(lines):
     tokens = []
     i = 0
@@ -461,6 +460,8 @@ def lexer(lines):
                     tokens[i].append(["<symbol>", word, pc])
                 else:
                     tokens[i].append(["<idk_man>", word, pc])
+                    print("UNKNOWN TOKEN!")
+                    print(word)
             i += 1
     return tokens
 
@@ -474,9 +475,7 @@ def lexer(lines):
 #          | <mnm_1_e> <reg> "," <expr>
 #          | <mnm_2> <reg> "," <reg>
 
-# <expr> ::= [ <op> ] <numb> { <op> <numb> }
-
-# <term> ::= { <ury_op> } <numb>
+# <expr> ::= [ (<plus> | <minus>) ] <numb> { (<plus> | <minus> <numb> }
 
 # <drct> ::= <drct_1> ( <08nm> | <16nm> )
 #          | <drct_p> <08nm> { ","  <08nm> }
@@ -502,6 +501,46 @@ def parse_lbl_def(tokens):
         return 0
 
 ######################################################
+def parse_expr(tokens):
+    data = ["<expr>"]
+    error = ["<error>"]
+    if not tokens:
+        print("Empty expr")
+        return 0
+    ##################################################
+    if(tokens[0][0] in {"<plus>", "<minus>"}):
+        data.append(tokens.pop(0))
+    if(not tokens):
+        print("Missing number/symbol!")
+        return error
+    if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
+        if(tokens[0][0] not in {"<plus>", "<minus>"}):
+            print("Expression had bad identifier!")
+            return error
+        print("Expression has extra operator!")
+        return error
+
+    data.append(tokens.pop(0))
+    while(tokens):
+        if(tokens[0][0] not in {"<plus>", "<minus>"}):
+            if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
+                print("Expression has bad identifier!")
+                return error
+            print("Expression missing operator!")
+            return error
+        data.append(tokens.pop(0))
+        if(not tokens):
+            print("Expression missing number/symbol!")
+            return error
+        if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
+            if(tokens[0][0] not in {"<plus>", "<minus>"}):
+                print("Expression has bad identifier: ",tokens[0][0])
+                return error
+            print("Expression has extra operator!")
+            return error
+        data.append(tokens.pop(0))
+    return data
+######################################################
 def parse_drct(tokens):
     data = ["<drct>"]
     error = ["<error>"]
@@ -521,7 +560,11 @@ def parse_drct(tokens):
         return data
     ##################################################
     # [drct_p]
-    elif(tokens[0][0] == "<drct_p>"):
+    elif(tokens[0][0] in {"<drct_p>", "<08nm>"}):
+        if(tokens[0][0] == "<08nm>"):
+            if(tokens[0][1] != "DB"):
+                return 0
+            tokens[0][0] = "<drct_p>"
         data.append(tokens.pop(0))
         if(not tokens):
             print("Directive missing argument!")
@@ -558,10 +601,10 @@ def parse_drct(tokens):
         if(not tokens):
             print("Directive missing argument!")
             return error
-        if((tokens[0][0] not in {"<08nm>", "16nm", "symbol"})):
-            print("Directive has bad argument!")
+        expr = parse_expr(tokens)
+        if(expr == error):
             return error
-        data.append(tokens.pop(0))
+        data.append(expr)
         return data
     elif(tokens[0][0] == "<drct_w>"):
         print("Directive missing initial argument!")
@@ -583,16 +626,18 @@ def parse_code(tokens):
     ##################################################
     # [mnm_0_e]
     elif(tokens[0][0] in {"<mnm_0_e>", "<08nm>"}):
-        if(tokens[0][0] == "<08nm>" and tokens[0][1] == "CC"):
+        if(tokens[0][0] == "<08nm>"):
+            if(tokens[0][1] != "CC"):
+                return 0
             tokens[0][0] = "<mnm_0_e>"
         data.append(tokens.pop(0))
         if(not tokens):
             print("Instruction missing argument!")
             return error
-        if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
-            print("Instruction has bad argument!")
+        expr = parse_expr(tokens)
+        if(expr == error):
             return error
-        data.append(tokens.pop(0))
+        data.append(expr)
         return data
     ##################################################
     # [mnm_1]
@@ -618,7 +663,7 @@ def parse_code(tokens):
             return error
         data.append(tokens.pop(0))
         if(not tokens):
-            print("instruction missing comma and argument!")
+            print("Instruction missing comma and argument!")
             return error
         if(tokens[0][0] != "<comma>"):
             if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
@@ -630,10 +675,10 @@ def parse_code(tokens):
         if(not tokens):
             print("Instruction missing argument!")
             return error
-        if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
-            print("Instruction has bad argument!")
+        expr = parse_expr(tokens)
+        if(expr == error):
             return error
-        data.append(tokens.pop(0))
+        data.append(expr)
         return data
     ##################################################
     # [mnm_2]
@@ -647,7 +692,7 @@ def parse_code(tokens):
             return error
         data.append(tokens.pop(0))
         if(not tokens):
-            print("instruction missing comma and argument!")
+            print("Instruction missing comma and register/register-pair!")
             return error
         if(tokens[0][0] != "<comma>"):
             if(tokens[0][0] != "<reg>"):
@@ -725,7 +770,7 @@ if(len(sys.argv) == 3):
     inFile = sys.argv[1]
     outFile = sys.argv[2]
 else:
-    inFile = "program.asm"
+    inFile = "pgm.asm"
 
 parse(lexer(read(inFile)))
 
