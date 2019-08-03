@@ -162,40 +162,6 @@ def db(line, tags_with_comma, tags, args_with_comma, args, symbols, code):
                 return
         i += 1
 
-def equ(line, tags_with_comma, tags, args_with_comma, args, symbols, code):
-    if(tags_with_comma[0] == "symbol"):
-        if(args_with_comma[0] in table.mnemonics or args_with_comma[0] in table.reserved):
-            error("Cannot use reserved keyword in equ directive!",line)
-            return
-        elif(args_with_comma[0] in symbols.eightBitDefs or
-           args_with_comma[0] in symbols.sixteenBitDefs):
-            error("Symbol already defined!",line)
-            return
-        elif(args_with_comma[0] in symbols.labelDefs):
-            error("Symbol conflicts with previous labelDef!",line)
-            return
-
-        if(tags_with_comma[1] == "[xx]"):
-            symbols.eightBitDefs[args_with_comma[0]] = '{0:0{1}X}'.format(int(args_with_comma[1], base=16),2)
-        
-        elif(tags_with_comma[1] == "[xxxx]"):
-            symbols.sixteenBitDefs[args_with_comma[0]] = '{0:0{1}X}'.format(int(args_with_comma[1], base=16),4)
-
-        else:
-            error("Directive has bad argument!", line)
-    else:
-        error("Directive has bad argument!", line)
-
-directives = {
-    #Format:
-    # [function, min_args, max_args, name]
-    # -1 means no bound
-    "ORG": [org, 1, 1, "ORG"],
-    "DB":  [db, 1, -1, "DB"],
-    "EQU": [equ, 2, 2, "EQU"],
-    "DS":  [ds, 1, 1, "DS"],
-}
-
 ##############################################################################################################
 # Parsing functions
 
@@ -444,14 +410,68 @@ def lexer(lines):
                     tokens[i].append(["<16nm>", word, pc])
                 elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
                     tokens[i].append(["<symbol>", word, pc])
+                elif word == "$":
+                    tokens[i].append(["<lc>", word, pc])
                 else:
                     tokens[i].append(["<idk_man>", word, pc])
                     print("UNKNOWN TOKEN!")
                     print(word)
             i += 1
     return tokens
+######################################################################################
+def evaluate(expr, symbols, code):
+    sign, pop, result = 1, 2, 0
+    while(expr):
+        ###################################
+        if(len(expr) >= 2):
+            pop = 2
+            if(expr[-2][0] == "<plus>"):
+                sign = 1
+            else:
+                sign = -1
+        else:
+            pop = 1
+            sign = 1
+        ###################################
+        if(expr[-1][0] != "<symbol>"):
+            result += sign*int(expr[-1][1], base=16)
+            expr = expr[:-pop]
+        else:
+            if(expr[-1][1] in symbols.eightBitDefs):
+                result += sign*int(symbols.eightBitDefs[expr[-1][1]], base=16)
+                expr = expr[:-pop]
+            elif(expr[-1][1] in symbols.sixteenBitDefs):
+                result += sign*int(symbols.sixteenBitDefs[expr[-1][1]], base=16)
+                expr = expr[:-pop]
+            else:
+                expr += [["<plus>", "+"],["<numb>", hex(result)]]
+                return expr
+        ###################################
+    return [result]
+######################################################################################
+def parse_lbl_def(tokens, symbols, code):
+    error = ["<error>"]
+    if not tokens:
+        return 0
+    if(tokens[0][0] == "<lbl_def>"):
+        lbl = tokens[0][1]
+        if lbl[:-1] in symbols.labelDefs:
+            print("Label already in use!")
+            return error
+        elif lbl[:-1] in table.reserved:
+            print("Label cannot be keyword!")
+            return error
+        elif lbl[:-1] in (symbols.eightBitDefs, symbols.sixteenBitDefs):
+            print("Label conflicts with previous symbol definition")
+            return error
+        else:
+            symbols.labelDefs[lbl[:-1]] = '{0:0{1}X}'.format(code.address,4)
+            code.label = lbl
+        return tokens.pop(0)
+    else:
+        return 0
 
-######################################################
+######################################################################################
 # Grammar:
 #
 # <line> ::= <lbl_def> [<drct>] [<code>]
@@ -470,8 +490,8 @@ def lexer(lines):
 #          | <drct_p> <08nm> { ","  <08nm> }
 #          | <symbol> <drct_w> <expr>
 #
-# <numb> := <08nm> | <16nm> | <symbol>
-######################################################
+# <numb> := <08nm> | <16nm> | <symbol> | <lc>
+######################################################################################
 def parse(token_lines, symbols, code):
     tree = []
     for tokens in token_lines:
@@ -481,26 +501,49 @@ def parse(token_lines, symbols, code):
     for l in tree:
         print(l)
 
-######################################################
-def parse_lbl_def(tokens, symbols, code):
-    if not tokens:
-        return 0
-    if(tokens[0][0] == "<lbl_def>"):
-        lbl = tokens[0][1]
-        if lbl[:-1] in symbols.labelDefs:
-            print("Label already in use!")
-        elif lbl[:-1] in table.reserved:
-            print("Label cannot be keyword!")
-        elif lbl[:-1] in (symbols.eightBitDefs, symbols.sixteenBitDefs):
-            print("Label conflicts with previous symbol definition")
-        else:
-            symbols.labelDefs[lbl[:-1]] = '{0:0{1}X}'.format(code.address,4)
-            code.label = lbl
-        return tokens.pop(0)
-    else:
-        return 0
+def equ(args, symbols, code):
+    name = args[0][1]
+    if(name in table.reserved):
+        print("Cannot use reserved keyword in equ directive!")
+        return
+    elif(name in (symbols.eightBitDefs, symbols.sixteenBitDefs)):
+        print("Symbol already defined!")
+        return
+    elif(name in symbols.labelDefs):
+        print("Symbol conflicts with previous labelDef!")
+        return
 
-######################################################
+    val = evaluate(args[1], symbols, code)
+    if(len(val) == 1):
+        num = val.pop()
+        if num > 65535:
+            print("Expression greater than 0xFFFF!")
+            return
+        elif num > 255:
+            print("sixteenBitDef:",num)
+            symbols.sixteenBitDefs[name] = '{0:0{1}X}'.format(num,4)
+            return
+        elif num >= 0:
+            print("eightBitDef:",num)
+            symbols.eightBitDefs[name] = '{0:0{1}X}'.format(num,2)
+            return
+        else:
+            print("Expression must be positive!")
+            return
+    else:
+        print("Expression depends on unresolved symbol!")
+        return
+
+directives = {
+    #Format:
+    # [function, min_args, max_args, name]
+    # -1 means no bound
+    "ORG": [org, 1, 1, "ORG"],
+    "DB":  [db, 1, -1, "DB"],
+    "EQU": [equ, 2, 2, "EQU"],
+    "DS":  [ds, 1, 1, "DS"],
+}
+
 def parse_expr(tokens, symbols, code):
     data = ["<expr>"]
     error = ["<error>"]
@@ -513,7 +556,7 @@ def parse_expr(tokens, symbols, code):
     if(not tokens):
         print("Missing number/symbol!")
         return error
-    if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
+    if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>", "<lc>"}):
         if(tokens[0][0] not in {"<plus>", "<minus>"}):
             print("Expression had bad identifier!")
             return error
@@ -523,7 +566,7 @@ def parse_expr(tokens, symbols, code):
     data.append(tokens.pop(0))
     while(tokens):
         if(tokens[0][0] not in {"<plus>", "<minus>"}):
-            if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
+            if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>", "<lc>"}):
                 print("Expression has bad identifier!")
                 return error
             print("Expression missing operator!")
@@ -532,15 +575,15 @@ def parse_expr(tokens, symbols, code):
         if(not tokens):
             print("Expression missing number/symbol!")
             return error
-        if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
+        if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>", "<lc>"}):
             if(tokens[0][0] not in {"<plus>", "<minus>"}):
-                print("Expression has bad identifier: ",tokens[0][0])
+                print("Expression has bad identifier!")
                 return error
             print("Expression has extra operator!")
             return error
         data.append(tokens.pop(0))
     return data
-######################################################
+######################################################################################
 def parse_drct(tokens, symbols, code):
     data = ["<drct>"]
     error = ["<error>"]
@@ -557,6 +600,7 @@ def parse_drct(tokens, symbols, code):
             print("Directive has bad argument!")
             return error
         data.append(tokens.pop(0))
+
         return data
     ##################################################
     # [drct_p]
@@ -605,6 +649,10 @@ def parse_drct(tokens, symbols, code):
         if(expr == error):
             return error
         data.append(expr)
+        ##############################################
+        arg1 = data[1]
+        arg2 = data[3][1:]
+        directives[data[2][1]][0]([arg1,arg2],symbols,code)
         return data
     elif(tokens[0][0] == "<drct_w>"):
         print("Directive missing initial argument!")
@@ -710,7 +758,7 @@ def parse_code(tokens, symbols, code):
         return data
 
     return 0
-######################################################
+######################################################################################
 def parse_line(tokens, symbols, code):
     data = ["<line>"]
     error = ["<error>"]
@@ -755,7 +803,7 @@ def parse_line(tokens, symbols, code):
     # everything's good
     return data
 
-##############################################################################################################
+######################################################################################
 # Main program
 
 code = Code()
@@ -772,4 +820,3 @@ else:
     inFile = "pgm.asm"
 
 parse(lexer(read(inFile)),symbols,code)
-
