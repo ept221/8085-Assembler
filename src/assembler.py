@@ -451,43 +451,57 @@ def lexer(lines):
             i += 1
     return tokens
 
+######################################################
+# Grammar:
+#
 # <line> ::= <lbl_def> [<drct>] [<code>]
 #          | <drct> [<code>]
 #          | <code>
-
+#
 # <code> ::= <mnm_0>
 #          | <mnm_0_e> <expr>
 #          | <mnm_1> <reg>
 #          | <mnm_1_e> <reg> "," <expr>
 #          | <mnm_2> <reg> "," <reg>
-
+#
 # <expr> ::= [ (<plus> | <minus>) ] <numb> { (<plus> | <minus> <numb> }
-
+#
 # <drct> ::= <drct_1> ( <08nm> | <16nm> )
 #          | <drct_p> <08nm> { ","  <08nm> }
 #          | <symbol> <drct_w> <expr>
-
+#
 # <numb> := <08nm> | <16nm> | <symbol>
-
-def parse(token_lines):
+######################################################
+def parse(token_lines, symbols, code):
     tree = []
     for tokens in token_lines:
-        tree.append(parse_line(tokens))
+        tree.append(parse_line(tokens, symbols, code))
 
     print("tree:")
     for l in tree:
         print(l)
 
-def parse_lbl_def(tokens):
+######################################################
+def parse_lbl_def(tokens, symbols, code):
     if not tokens:
         return 0
     if(tokens[0][0] == "<lbl_def>"):
+        lbl = tokens[0][1]
+        if lbl[:-1] in symbols.labelDefs:
+            print("Label already in use!")
+        elif lbl[:-1] in table.reserved:
+            print("Label cannot be keyword!")
+        elif lbl[:-1] in (symbols.eightBitDefs, symbols.sixteenBitDefs):
+            print("Label conflicts with previous symbol definition")
+        else:
+            symbols.labelDefs[lbl[:-1]] = '{0:0{1}X}'.format(code.address,4)
+            code.label = lbl
         return tokens.pop(0)
     else:
         return 0
 
 ######################################################
-def parse_expr(tokens):
+def parse_expr(tokens, symbols, code):
     data = ["<expr>"]
     error = ["<error>"]
     if not tokens:
@@ -527,7 +541,7 @@ def parse_expr(tokens):
         data.append(tokens.pop(0))
     return data
 ######################################################
-def parse_drct(tokens):
+def parse_drct(tokens, symbols, code):
     data = ["<drct>"]
     error = ["<error>"]
     if not tokens:
@@ -587,7 +601,7 @@ def parse_drct(tokens):
         if(not tokens):
             print("Directive missing argument!")
             return error
-        expr = parse_expr(tokens)
+        expr = parse_expr(tokens, symbols, code)
         if(expr == error):
             return error
         data.append(expr)
@@ -598,8 +612,7 @@ def parse_drct(tokens):
 
     return 0
 ######################################################
-
-def parse_code(tokens):
+def parse_code(tokens, symbols, code):
     data = ["<code>"]
     error = ["<error>"]
     if not tokens:
@@ -620,7 +633,7 @@ def parse_code(tokens):
         if(not tokens):
             print("Instruction missing argument!")
             return error
-        expr = parse_expr(tokens)
+        expr = parse_expr(tokens, symbols, code)
         if(expr == error):
             return error
         data.append(expr)
@@ -661,7 +674,7 @@ def parse_code(tokens):
         if(not tokens):
             print("Instruction missing argument!")
             return error
-        expr = parse_expr(tokens)
+        expr = parse_expr(tokens, symbols, code)
         if(expr == error):
             return error
         data.append(expr)
@@ -697,29 +710,29 @@ def parse_code(tokens):
         return data
 
     return 0
-
-def parse_line(tokens):
+######################################################
+def parse_line(tokens, symbols, code):
     data = ["<line>"]
     error = ["<error>"]
     if(len(tokens) == 0):
         return 0
     ################################
     # [lbl_def]
-    lbl_def = parse_lbl_def(tokens)
+    lbl_def = parse_lbl_def(tokens, symbols, code)
     if(lbl_def):
         if(lbl_def == error):
             return error
         data.append(lbl_def)
     ################################
     # [drct]
-    drct = parse_drct(tokens)
+    drct = parse_drct(tokens, symbols, code)
     if(drct):
         if(drct == error):
             return error
         data.append(drct)
     ################################
     # [code]
-    code = parse_code(tokens)
+    code = parse_code(tokens, symbols, code)
     if(code):
         if(code == error):
             return error
@@ -756,7 +769,7 @@ if(len(sys.argv) == 3):
     inFile = sys.argv[1]
     outFile = sys.argv[2]
 else:
-    inFile = "program.asm"
+    inFile = "pgm.asm"
 
-parse(lexer(read(inFile)))
+parse(lexer(read(inFile)),symbols,code)
 
