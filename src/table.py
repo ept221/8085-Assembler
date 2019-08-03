@@ -128,3 +128,5 @@ reg = {
     'PSW',
     'M',
 }
+
+reserved = bin_op | uni_op | mnm_0 | mnm_0_e | mnm_1 | mnm_1_e | mnm_2 | drct_1 | drct_p | drct_w | reg

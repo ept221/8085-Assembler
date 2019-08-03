@@ -199,20 +199,6 @@ directives = {
 ##############################################################################################################
 # Parsing functions
 
-def parse_labelDef(line, symbols):
-    pc = line[0][1]
-    lbl = line[1][0][:-1]   # Get rid of the colon at the end
-    if lbl in symbols.labelDefs:
-        error("Label already used!",line)
-        return
-    elif lbl in table.mnemonics:
-        error("Label is a key-word!",line)
-    elif(lbl in symbols.eightBitDefs or lbl in symbols.sixteenBitDefs):
-        error("Label conflicts with previous symbol definition!",line)
-    else:
-        symbols.labelDefs[lbl] = '{0:0{1}X}'.format(code.address,4)
-        code.label = lbl + ":"
-
 def parse_mnemonic(line, index, code):
     # This function constructs an instruction and checks
     # to see if it is valid
@@ -770,7 +756,7 @@ if(len(sys.argv) == 3):
     inFile = sys.argv[1]
     outFile = sys.argv[2]
 else:
-    inFile = "pgm.asm"
+    inFile = "program.asm"
 
 parse(lexer(read(inFile)))
 
