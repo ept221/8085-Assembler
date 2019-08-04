@@ -106,66 +106,14 @@ def read(name):
 ##############################################################################################################
 # Utility functions
 
-def error(message, line):
-    global errors
-    errors += "Error at line " + str(line[0][0]) + ": " + message + "\n"
 
 ##############################################################################################################
 # Directive functions
 
-def org(line, tags_with_comma, tags, args_with_comma, args, symbols, code):
-
-    if(tags[0] == "[xx]" or tags[0] == "[xxxx]"):
-        code.address = int(args[0], base = 16)
-
-    else:
-        error("Directive has bad argument!",line)
-        return
-
-def ds(line, tags_with_comma, tags, args_with_comma, args, symbols, code):
-
-    if(tags[0] == "[xx]" or tags[0] == "[xxxx]"):
-        code.address += int(args[0], base = 16)
-
-    elif(tags[0] == "symbol"):
-
-        if(args[0] in symbols.eightBitDefs):
-            code.address += int(symbols.eightBitDefs[args[0]], base = 16)
-
-        elif(args[0] in symbols.sixteenBitDefs):
-            code.address += int(symbols.sixteenBitDefs[args[0]], base = 16)
-
-        else:
-            error("Symbol not defined before use!",line)
-    else:
-        error("Directive has bad argument!",line)
-
-
-def db(line, tags_with_comma, tags, args_with_comma, args, symbols, code):
-
-    i = 0
-    while(i < len(args_with_comma)):
-        if(not i%2):
-            if(tags_with_comma[i] == "[xx]"):
-                code.write(int(args_with_comma[i],base = 16),line,instrct="DB")
-            elif(tags_with_comma[i] == "symbol"):
-                code.write("D_"+args_with_comma[i],line, instrct = "DB", mode="symbol")
-            elif(tags_with_comma[i] == "comma"):
-                error("Directive has bad comma!",line)
-                return
-            else:
-                error("Directive has bad argument!",line)
-                return
-        else:
-            if(tags_with_comma[i] != "comma"):
-                error("Directive missing comma!",line)
-                return
-        i += 1
 
 ##############################################################################################################
 # Parsing functions
-
-def parse_mnemonic(line, index, code):
+def parse_mnemonic(line, index, code, lines):
     # This function constructs an instruction and checks
     # to see if it is valid
 
@@ -203,7 +151,7 @@ def parse_mnemonic(line, index, code):
     # Check to see if the constructed instruction is valid
     if(instruction not in instructions.instructions):
         error("Bad instruction: " + str(instruction),line)
-        return
+        return 
 
     # Write the instruction to memory
     instructArgStr = instruction+argStr
@@ -267,46 +215,6 @@ def parse_mnemonic(line, index, code):
 ##############################################################################################################
 # Passes
                
-def firstPass(lines,symbols,code):
-    # Figures what type of statement we have based the first few words in a line of lines
-    # Then it calls a particular parser to parese the rest of the command against a
-    # particular grammer
-
-    # Recall the format for a line: [[Line_number, Program_Counter] [body] [comment]]
-    print(lines)
-    for line in lines:
-        index = 0
-        if(line[1]):
-            length = len(line[1])
-            lengthLessLbl = length
-            if(re.match(r'^.+:$',line[1][0])):
-                # First word in the line is: "labelDef:"
-                # Since it is, parse the labelDef and move the
-                # index so that we can look at the rest of
-                # the line, if there is any
-
-                parse_labelDef(line,symbols)
-                index += 1
-                lengthLessLbl -= 1
-            if(length > index):
-                # We have a message which includes more than a labelDef, if any.
-                # We use index to skip over the labelDef, if any.
-
-                if(line[1][index] in table.mnemonics):
-                    parse_mnemonic(line, index, code)
-
-                elif(line[1][index] in table.directives and line[1][index] != "EQU"):
-                    parse_directive(line, index, directives[line[1][index]], symbols, code)
-
-                elif(lengthLessLbl >= 2 and line[1][index + 1] == "EQU"):
-                    parse_directive(line, index, directives[line[1][index + 1]], symbols, code)
-
-                else:
-                    error("Bad initial identifier!", line)
-                    return
-        if(errors):
-            return
-
 def secondPass(symbols, code):
     # Format: [line] [address] [label] [instruction + argument] [hex code] [comment]
     for i, codeLine in enumerate(code.data):
@@ -368,56 +276,57 @@ def output(code, name):
 ##############################################################################################################
 # Experimental
 
+def error(message, line):
+    print("Error at line " + str(line[0][0]) + ": " + message)
+
 #for lineNumber, line in enumerate(file, start = 1):
 def lexer(lines):
     tokens = []
-    i = 0
-    for line in lines:
-        pc = line[0][1]
-        if(len(line[1]) != 0):
-            tokens.append([])
-            for word in line[1]:
-                word = word.strip()
-                if word in table.mnm_0:
-                    tokens[i].append(["<mnm_0>", word, pc])
-                elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
-                    tokens[i].append(["<08nm>", word, pc])
-                elif word in table.mnm_0_e:
-                    tokens[i].append(["<mnm_0_e>", word, pc])
-                elif word in table.mnm_1:
-                    tokens[i].append(["<mnm_1>", word, pc])
-                elif word in table.mnm_1_e:
-                    tokens[i].append(["<mnm_1_e>", word, pc])
-                elif word in table.mnm_2:
-                    tokens[i].append(["<mnm_2>", word, pc])
-                elif word in table.reg:
-                    tokens[i].append(["<reg>", word, pc])
-                elif word == ",":
-                    tokens[i].append(["<comma>", word, pc])
-                elif word == "+":
-                    tokens[i].append(["<plus>", word, pc])
-                elif word == "-":
-                    tokens[i].append(["<minus>", word, pc])
-                elif word in table.drct_1:
-                    tokens[i].append(["<drct_1>", word, pc])
-                elif word in table.drct_p:
-                    tokens[i].append(["<drct_p>", word, pc])
-                elif word in table.drct_w:
-                    tokens[i].append(["<drct_w>", word, pc])
-                elif re.match(r'^.+:$',word):
-                    tokens[i].append(["<lbl_def>", word, pc])
-                elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
-                    tokens[i].append(["<16nm>", word, pc])
-                elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
-                    tokens[i].append(["<symbol>", word, pc])
-                elif word == "$":
-                    tokens[i].append(["<lc>", word, pc])
-                else:
-                    tokens[i].append(["<idk_man>", word, pc])
-                    print("UNKNOWN TOKEN!")
-                    print(word)
-            i += 1
-    return tokens
+    code_lines = [x for x in lines if len(x[1])]
+    for line in code_lines:
+        pc, tl = line[0][1], []
+        for word in line[1]:
+            word = word.strip()
+            if word in table.mnm_0:
+                tl.append(["<mnm_0>", word])
+            elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
+                tl.append(["<08nm>", word, pc])
+            elif word in table.mnm_0_e:
+                tl.append(["<mnm_0_e>", word])
+            elif word in table.mnm_1:
+                tl.append(["<mnm_1>", word])
+            elif word in table.mnm_1_e:
+                tl.append(["<mnm_1_e>", word])
+            elif word in table.mnm_2:
+                tl.append(["<mnm_2>", word])
+            elif word in table.reg:
+                tl.append(["<reg>", word])
+            elif word == ",":
+                tl.append(["<comma>", word])
+            elif word == "+":
+                tl.append(["<plus>", word])
+            elif word == "-":
+                tl.append(["<minus>", word])
+            elif word in table.drct_1:
+                tl.append(["<drct_1>", word])
+            elif word in table.drct_p:
+                tl.append(["<drct_p>", word])
+            elif word in table.drct_w:
+                tl.append(["<drct_w>", word])
+            elif re.match(r'^.+:$',word):
+                tl.append(["<lbl_def>", word])
+            elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
+                tl.append(["<16nm>", word])
+            elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
+                tl.append(["<symbol>", word])
+            elif word == "$":
+                tl.append(["<lc>", word, pc])
+            else:
+                tl.append(["<idk_man>", word])
+                error("Uknown token!", line)
+        tokens.append(tl)
+
+    return [code_lines, tokens]
 ######################################################################################
 def evaluate(expr, symbols, code):
     sign, pop, result = 1, 2, 0
@@ -433,9 +342,12 @@ def evaluate(expr, symbols, code):
             pop = 1
             sign = 1
         ###################################
-        if(expr[-1][0] != "<symbol>"):
+        if(expr[-1][0] in {"<08nm>", "<16nm>", "<numb>"}):
             result += sign*int(expr[-1][1], base=16)
             expr = expr[:-pop]
+        elif(expr[-1][0] == "<lc>"):
+            result += sign*code.address
+            expr = expr[:-pop] 
         else:
             if(expr[-1][1] in symbols.eightBitDefs):
                 result += sign*int(symbols.eightBitDefs[expr[-1][1]], base=16)
@@ -449,21 +361,21 @@ def evaluate(expr, symbols, code):
         ###################################
     return [result]
 ######################################################################################
-def parse_lbl_def(tokens, symbols, code):
-    error = ["<error>"]
+def parse_lbl_def(tokens, symbols, code, line):
+    er = ["<error>"]
     if not tokens:
         return 0
     if(tokens[0][0] == "<lbl_def>"):
         lbl = tokens[0][1]
         if lbl[:-1] in symbols.labelDefs:
-            print("Label already in use!")
-            return error
+            error("Label already in use!",line)
+            return er
         elif lbl[:-1] in table.reserved:
-            print("Label cannot be keyword!")
-            return error
+            error("Label cannot be keyword!",line)
+            return er
         elif lbl[:-1] in (symbols.eightBitDefs, symbols.sixteenBitDefs):
-            print("Label conflicts with previous symbol definition")
-            return error
+            error("Label conflicts with previous symbol definition",line)
+            return er
         else:
             symbols.labelDefs[lbl[:-1]] = '{0:0{1}X}'.format(code.address,4)
             code.label = lbl
@@ -486,52 +398,115 @@ def parse_lbl_def(tokens, symbols, code):
 #
 # <expr> ::= [ (<plus> | <minus>) ] <numb> { (<plus> | <minus> <numb> }
 #
-# <drct> ::= <drct_1> ( <08nm> | <16nm> )
-#          | <drct_p> <08nm> { ","  <08nm> }
+# <drct> ::= <drct_1> <expr>
+#          | <drct_p> <expr> { ","  <expr> }
 #          | <symbol> <drct_w> <expr>
 #
 # <numb> := <08nm> | <16nm> | <symbol> | <lc>
 ######################################################################################
-def parse(token_lines, symbols, code):
+def parse(lines, symbols, code):
+
+    code_lines, tokenLines = lexer(lines)
     tree = []
-    for tokens in token_lines:
-        tree.append(parse_line(tokens, symbols, code))
+    for tokens, line in zip(tokenLines, code_lines):
+        tree.append(parse_line(tokens, symbols, code, line))
 
     print("tree:")
     for l in tree:
         print(l)
 
-def equ(args, symbols, code):
+def org(arg, symbols, code, line):
+    val = evaluate(arg, symbols, code)
+    if(len(val) == 1):
+        num = val[0]
+        if(num < 0):
+            error("Expression must be positive!",line)
+            return
+        else:
+            code.address = num
+            return
+    else:
+        error("Expression depends on unresolved symbol!",line)
+        return
+
+def db(args, symbols, code, line):
+    for expr in args:
+        val = evaluate(expr, symbols, code)
+        if(len(val) == 1):
+            num = val[0]
+            if(num < 0):
+                error("Expression must be positive!",line)
+                return
+            elif(num > 255):
+                error("Expression too large! Must evaluate to an 8-bit number!", line)
+                return
+            else:
+                pass #code.write()
+
+def db_old(line, tags_with_comma, tags, args_with_comma, args, symbols, code):
+
+    i = 0
+    while(i < len(args_with_comma)):
+        if(not i%2):
+            if(tags_with_comma[i] == "[xx]"):
+                code.write(int(args_with_comma[i],base = 16),line,instrct="DB")
+            elif(tags_with_comma[i] == "symbol"):
+                code.write("D_"+args_with_comma[i],line, instrct = "DB", mode="symbol")
+            elif(tags_with_comma[i] == "comma"):
+                error("Directive has bad comma!",line)
+                return
+            else:
+                error("Directive has bad argument!",line)
+                return
+        else:
+            if(tags_with_comma[i] != "comma"):
+                error("Directive missing comma!",line)
+                return
+        i += 1
+
+def equ(args, symbols, code, line):
     name = args[0][1]
     if(name in table.reserved):
-        print("Cannot use reserved keyword in equ directive!")
+        error("Cannot use reserved keyword in equ directive!",line)
         return
     elif(name in (symbols.eightBitDefs, symbols.sixteenBitDefs)):
-        print("Symbol already defined!")
+        error("Symbol already defined!",line)
         return
     elif(name in symbols.labelDefs):
-        print("Symbol conflicts with previous labelDef!")
+        error("Symbol conflicts with previous labelDef!",line)
         return
 
     val = evaluate(args[1], symbols, code)
     if(len(val) == 1):
-        num = val.pop()
+        num = val[0]
         if num > 65535:
-            print("Expression greater than 0xFFFF!")
+            error("Expression greater than 0xFFFF!",line)
             return
         elif num > 255:
-            print("sixteenBitDef:",num)
             symbols.sixteenBitDefs[name] = '{0:0{1}X}'.format(num,4)
             return
         elif num >= 0:
-            print("eightBitDef:",num)
             symbols.eightBitDefs[name] = '{0:0{1}X}'.format(num,2)
             return
         else:
-            print("Expression must be positive!")
+            error("Expression must be positive!",line)
             return
     else:
-        print("Expression depends on unresolved symbol!")
+        error("Expression depends on unresolved symbol!",line)
+        return
+
+def ds(arg, symbols, code, line):
+    val = evaluate(arg, symbols, code)
+    if(len(val) == 1):
+        num = val[0]
+        if(num < 0):
+            error("Expression must be positive!",line)
+            return
+        else:
+            code.address += num
+            return
+    else:
+        error("Expression depends on unresolved symbol!",line)
         return
 
 directives = {
@@ -544,9 +519,9 @@ directives = {
     "DS":  [ds, 1, 1, "DS"],
 }
 
-def parse_expr(tokens, symbols, code):
+def parse_expr(tokens, symbols, code, line):
     data = ["<expr>"]
-    error = ["<error>"]
+    er = ["<error>"]
     if not tokens:
         print("Empty expr")
         return 0
@@ -554,39 +529,43 @@ def parse_expr(tokens, symbols, code):
     if(tokens[0][0] in {"<plus>", "<minus>"}):
         data.append(tokens.pop(0))
     if(not tokens):
-        print("Missing number/symbol!")
-        return error
+        error("Missing number/symbol!",line)
+        return er
     if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>", "<lc>"}):
         if(tokens[0][0] not in {"<plus>", "<minus>"}):
-            print("Expression had bad identifier!")
-            return error
-        print("Expression has extra operator!")
-        return error
+            if(len(data) > 1):
+                error("Expression had bad identifier!",line)
+                return er
+            else:
+                # No expression found
+                return 0
+        error("Expression has extra operator!",line)
+        return er
 
     data.append(tokens.pop(0))
     while(tokens):
         if(tokens[0][0] not in {"<plus>", "<minus>"}):
             if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>", "<lc>"}):
-                print("Expression has bad identifier!")
-                return error
-            print("Expression missing operator!")
-            return error
+                # reached end of expression
+                return data
+            error("Expression missing operator!",line)
+            return er
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Expression missing number/symbol!")
-            return error
+            error("Expression missing number/symbol!",line)
+            return er
         if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>", "<lc>"}):
             if(tokens[0][0] not in {"<plus>", "<minus>"}):
-                print("Expression has bad identifier!")
-                return error
-            print("Expression has extra operator!")
-            return error
+                error("Expression has bad identifier!",line)
+                return er
+            error("Expression has extra operator!",line)
+            return er
         data.append(tokens.pop(0))
     return data
 ######################################################################################
-def parse_drct(tokens, symbols, code):
+def parse_drct(tokens, symbols, code, line):
     data = ["<drct>"]
-    error = ["<error>"]
+    er = ["<error>"]
     if not tokens:
         return 0
     ##################################################
@@ -594,13 +573,15 @@ def parse_drct(tokens, symbols, code):
     if(tokens[0][0] == "<drct_1>"):
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Directive missing argument!")
-            return error
-        if(tokens[0][0] not in {"<08nm>", "<16nm>"}):
-            print("Directive has bad argument!")
-            return error
-        data.append(tokens.pop(0))
+            error("Directive missing argument!",line)
+            return er
+        expr = parse_expr(tokens, symbols, code, line)
+        if(expr == er):
+            return er
+        data.append(expr)
 
+        arg = data[2][1:]
+        directives[data[1][1]][0](arg,symbols,code,line)
         return data
     ##################################################
     # [drct_p]
@@ -611,58 +592,61 @@ def parse_drct(tokens, symbols, code):
             tokens[0][0] = "<drct_p>"
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Directive missing argument!")
-            return error
-        if(tokens[0][0] != "<08nm>"):
-            print("Directive has bad argument!")
-        data.append(tokens.pop(0))
+            error("Directive missing argument!",line)
+            return er
+
+        expr = parse_expr(tokens, symbols, code, line)
+        if(expr == er):
+            return er
+        data.append(expr)
+
         while(tokens):
             if(tokens[0][0] != "<comma>"):
-                if(tokens[0][0] != "<08nm>"):
-                    print("Directive has bad argument!")
-                    return error
-                print("Missing comma!")
+                error("Missing comma!",line)
+                return er
             data.append(tokens.pop(0))
             if(not tokens):
-                print("Directive missing last argument or has extra comma!")
-                return error
-            if(tokens[0][0] != "<08nm>"):
-                if(tokens[0][0] != "<comma>"):
-                    print("Directive has bad argument!")
-                    return error
-                print("Directive missing arguments!")
-                return error
-            data.append(tokens.pop(0))
+                error("Directive missing last argument or has extra comma!",line)
+                return er
+            expr = parse_expr(tokens, symbols, code, line)
+            if(expr == er):
+                return er
+            if(not expr):
+                error("Directive has bad argument!",line)
+                return er
+            data.append(expr)
+        args = [x[1:] for x in data[2:] if x[0] != "<comma>"]
+        directives[data[1][1]][0](args,symbols,code,line)
         return data
     ##################################################
     # [drct_w]
     elif(tokens[0][0] == "<symbol>"):
         data.append(tokens.pop(0))
         if(not tokens or tokens[0][0] != "<drct_w>"):
-            print("Bad Identifier!")
-            return error
+            error("Bad Identifier!",line)
+            return er
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Directive missing argument!")
-            return error
-        expr = parse_expr(tokens, symbols, code)
-        if(expr == error):
-            return error
+            error("Directive missing argument!",line)
+            return er
+        expr = parse_expr(tokens, symbols, code, line)
+        if(expr == er):
+            return er
         data.append(expr)
         ##############################################
         arg1 = data[1]
         arg2 = data[3][1:]
-        directives[data[2][1]][0]([arg1,arg2],symbols,code)
+        directives[data[2][1]][0]([arg1,arg2],symbols,code,line)
         return data
     elif(tokens[0][0] == "<drct_w>"):
-        print("Directive missing initial argument!")
-        return error
+        error("Directive missing initial argument!",line)
+        return er
 
     return 0
 ######################################################
-def parse_code(tokens, symbols, code):
+def parse_code(tokens, symbols, code, line):
     data = ["<code>"]
-    error = ["<error>"]
+    er = ["<error>"]
     if not tokens:
         return 0
     ##################################################
@@ -679,11 +663,11 @@ def parse_code(tokens, symbols, code):
             tokens[0][0] = "<mnm_0_e>"
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Instruction missing argument!")
-            return error
-        expr = parse_expr(tokens, symbols, code)
-        if(expr == error):
-            return error
+            error("Instruction missing argument!",line)
+            return er
+        expr = parse_expr(tokens, symbols, code, line)
+        if(expr == er):
+            return er
         data.append(expr)
         return data
     ##################################################
@@ -691,11 +675,11 @@ def parse_code(tokens, symbols, code):
     elif(tokens[0][0] == "<mnm_1>"):
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Instruction missing register/register-pair")
-            return error
+            error("Instruction missing register/register-pair",line)
+            return er
         if(tokens[0][0] != "<reg>"):
-            print("Instruction has bad register/register-pair")
-            return error
+            error("Instruction has bad register/register-pair",line)
+            return er
         data.append(tokens.pop(0))
         return data
     ##################################################
@@ -703,28 +687,28 @@ def parse_code(tokens, symbols, code):
     elif(tokens[0][0] == "<mnm_1_e>"):
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Instruction missing register/register-pair!")
-            return error
+            error("Instruction missing register/register-pair!",line)
+            return er
         if(tokens[0][0] != "<reg>"):
-            print("Instruction has bad register/register-pair!")
-            return error
+            error("Instruction has bad register/register-pair!",line)
+            return er
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Instruction missing comma and argument!")
-            return error
+            error("Instruction missing comma and argument!",line)
+            return er
         if(tokens[0][0] != "<comma>"):
             if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
-                print("Instruction has bad argument!")
-                return error
-            print("Instruction missing comma!")
-            return error
+                error("Instruction has bad argument!",line)
+                return er
+            error("Instruction missing comma!",line)
+            return er
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Instruction missing argument!")
-            return error
-        expr = parse_expr(tokens, symbols, code)
-        if(expr == error):
-            return error
+            error("Instruction missing argument!",line)
+            return er
+        expr = parse_expr(tokens, symbols, code, line)
+        if(expr == er):
+            return er
         data.append(expr)
         return data
     ##################################################
@@ -732,58 +716,58 @@ def parse_code(tokens, symbols, code):
     elif(tokens[0][0] == "<mnm_2>"):
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Instruction missing register/register-pair!")
-            return error
+            error("Instruction missing register/register-pair!",line)
+            return er
         if(tokens[0][0] != "<reg>"):
-            print("Instruction has bad register/register-pair!")
-            return error
+            error("Instruction has bad register/register-pair!",line)
+            return er
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Instruction missing comma and register/register-pair!")
-            return error
+            error("Instruction missing comma and register/register-pair!",line)
+            return er
         if(tokens[0][0] != "<comma>"):
             if(tokens[0][0] != "<reg>"):
-                print("Instruction has bad register/register-pair!")
-                return
-            print("Instruction missing comma!")
-            return error
+                error("Instruction has bad register/register-pair!",line)
+                return er
+            error("Instruction missing comma!",line)
+            return er
         data.append(tokens.pop(0))
         if(not tokens):
-            print("Instruction missing register/register-pair!")
-            return error
+            error("Instruction missing register/register-pair!",line)
+            return er
         if(tokens[0][0] != "<reg>"):
-            print("Instruction has bad register/register-pair!")
-            return error
+            error("Instruction has bad register/register-pair!",line)
+            return er
         data.append(tokens.pop(0))
         return data
 
     return 0
 ######################################################################################
-def parse_line(tokens, symbols, code):
+def parse_line(tokens, symbols, code, line):
     data = ["<line>"]
-    error = ["<error>"]
+    er = ["<error>"]
     if(len(tokens) == 0):
         return 0
     ################################
     # [lbl_def]
-    lbl_def = parse_lbl_def(tokens, symbols, code)
+    lbl_def = parse_lbl_def(tokens, symbols, code, line)
     if(lbl_def):
-        if(lbl_def == error):
-            return error
+        if(lbl_def == er):
+            return er
         data.append(lbl_def)
     ################################
     # [drct]
-    drct = parse_drct(tokens, symbols, code)
+    drct = parse_drct(tokens, symbols, code, line)
     if(drct):
-        if(drct == error):
-            return error
+        if(drct == er):
+            return er
         data.append(drct)
     ################################
     # [code]
-    code = parse_code(tokens, symbols, code)
+    code = parse_code(tokens, symbols, code, line)
     if(code):
-        if(code == error):
-            return error
+        if(code == er):
+            return er
         data.append(code)
     ###############################
     # check to see that we have at
@@ -791,14 +775,14 @@ def parse_line(tokens, symbols, code):
     # or code
     if(len(data) < 2):
         tokens.pop(0)
-        print("Bad Initial Identifier!")
-        return error
+        error("Bad Initial Identifier!",line)
+        return er
     ###############################
     # check to see if we have any
     # tokens left
     if(len(tokens)):   
-        print("Bad Identifier!")
-        return error
+        error("Bad Identifier!",line)
+        return er
     ###############################
     # everything's good
     return data
@@ -819,4 +803,4 @@ if(len(sys.argv) == 3):
 else:
     inFile = "pgm.asm"
 
-parse(lexer(read(inFile)),symbols,code)
+parse(read(inFile),symbols,code)
