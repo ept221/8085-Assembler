@@ -6,4 +6,4 @@
 
 
 GOO EQU 05
-FOO EQU GOO + 05 + 01
+FOO EQU GOO + 05 - 55
