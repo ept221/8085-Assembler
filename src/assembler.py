@@ -284,6 +284,7 @@ def lexer(lines):
             else:
                 tl.append(["<idk_man>", word])
                 error("Uknown token!", line)
+                print("=",word)
         tokens.append(tl)
 
     return [code_lines, tokens]
