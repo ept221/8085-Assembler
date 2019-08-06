@@ -201,10 +201,7 @@ directives = {
     "EQU": [equ, 2, 2, "EQU"],
     "DS":  [ds, 1, 1, "DS"],
 }
-
-##############################################################################################################
-# Passes
-               
+     
 def secondPass(symbols, code):
     # Format: [line] [address] [label] [instruction + argument] [hex code] [comment]
     i = 0
@@ -236,9 +233,6 @@ def secondPass(symbols, code):
                 error("Expression relies on unresolved symbol!",line)
                 print(expr)
         i += 1
-
-##############################################################################################################
-# Experimental
 
 def lexer(lines):
     tokens = []
@@ -324,28 +318,6 @@ def evaluate(expr, symbols, code):
                 return expr
         ###################################
     return [result]
-######################################################################################
-def parse_lbl_def(tokens, symbols, code, line):
-    er = ["<error>"]
-    if not tokens:
-        return 0
-    if(tokens[0][0] == "<lbl_def>"):
-        lbl = tokens[0][1]
-        if lbl[:-1] in symbols.labelDefs:
-            error("Label already in use!",line)
-            return er
-        elif lbl[:-1] in table.reserved:
-            error("Label cannot be keyword!",line)
-            return er
-        elif lbl[:-1] in (symbols.eightBitDefs, symbols.sixteenBitDefs):
-            error("Label conflicts with previous symbol definition",line)
-            return er
-        else:
-            symbols.labelDefs[lbl[:-1]] = '{0:0{1}X}'.format(code.address,4)
-            code.label = lbl
-        return tokens.pop(0)
-    else:
-        return 0
 
 ######################################################################################
 # Grammar:
@@ -403,6 +375,29 @@ def parse_expr(tokens, symbols, code, line):
                 return er
         data.append(tokens.pop(0))
     return data
+######################################################################################
+def parse_lbl_def(tokens, symbols, code, line):
+    er = ["<error>"]
+    if not tokens:
+        return 0
+    if(tokens[0][0] == "<lbl_def>"):
+        lbl = tokens[0][1]
+        if lbl[:-1] in symbols.labelDefs:
+            error("Label already in use!",line)
+            return er
+        elif lbl[:-1] in table.reserved:
+            error("Label cannot be keyword!",line)
+            return er
+        elif lbl[:-1] in (symbols.eightBitDefs, symbols.sixteenBitDefs):
+            error("Label conflicts with previous symbol definition",line)
+            return er
+        else:
+            symbols.labelDefs[lbl[:-1]] = '{0:0{1}X}'.format(code.address,4)
+            code.label = lbl
+        return tokens.pop(0)
+    else:
+        return 0
+
 ######################################################################################
 def parse_drct(tokens, symbols, code, line):
     data = ["<drct>"]
