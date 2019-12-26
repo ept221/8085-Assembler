@@ -1,6 +1,7 @@
 # Notes:
 # -> Put restrictions on valid symbol and label entries
 # -> Add decimal and binary base functionality
+# -> Add command line argument flags to modify the output format 
 ##############################################################################################################
 import re
 import sys
@@ -125,7 +126,7 @@ def org(arg, symbols, code, line):
             return
         else:
             code.address = num
-            return
+            return 1
     else:
         error("Expression depends on unresolved symbol!",line)
         return
@@ -137,46 +138,47 @@ def db(args, symbols, code, line):
             num = val[0]
             if(num < 0):
                 error("Expression must be positive!",line)
-                return
+                return 0
             elif(num > 255):
                 error("Expression too large! Must evaluate to an 8-bit number!", line)
-                return
+                return 0
             else:
                 code.write(num,line,instrct="DB")
+                return 1
         else:
             error("Expression depends on unresolved symbol!",line)
-            return
+            return 0
 
 def equ(args, symbols, code, line):
     name = args[0][1]
     if(name in table.reserved):
         error("Cannot use reserved keyword in equ directive!",line)
-        return
+        return 0
     elif(name in (symbols.eightBitDefs, symbols.sixteenBitDefs)):
         error("Symbol already defined!",line)
-        return
+        return 0
     elif(name in symbols.labelDefs):
         error("Symbol conflicts with previous labelDef!",line)
-        return
+        return 0
 
     val = evaluate(args[1], symbols, code)
     if(len(val) == 1):
         num = val[0]
         if num > 65535:
-            error("Expression greater than 0xFFFF!",line)
+            error("Expression evaluates to value greater than 0xFFFF!",line)
             return
         elif num > 255:
             symbols.sixteenBitDefs[name] = '{0:0{1}X}'.format(num,4)
-            return
+            return 1
         elif num >= 0:
             symbols.eightBitDefs[name] = '{0:0{1}X}'.format(num,2)
-            return
+            return 1
         else:
             error("Expression must be positive!",line)
-            return
+            return 0
     else:
         error("Expression depends on unresolved symbol!",line)
-        return
+        return 0
 
 def ds(arg, symbols, code, line):
     val = evaluate(arg, symbols, code)
@@ -184,13 +186,13 @@ def ds(arg, symbols, code, line):
         num = val[0]
         if(num < 0):
             error("Expression must be positive!",line)
-            return
+            return 0
         else:
             code.address += num
             return
     else:
         error("Expression depends on unresolved symbol!",line)
-        return
+        return 1
 
 directives = {
     #Format:
@@ -400,6 +402,7 @@ def parse_lbl_def(tokens, symbols, code, line):
 
 ######################################################################################
 def parse_drct(tokens, symbols, code, line):
+    args = [tokens, symbols, code, line]
     data = ["<drct>"]
     er = ["<error>"]
     if not tokens:
@@ -411,7 +414,7 @@ def parse_drct(tokens, symbols, code, line):
         if(not tokens):
             error("Directive missing argument!",line)
             return er
-        expr = parse_expr(tokens, symbols, code, line)
+        expr = parse_expr(*args)
         if(not expr):
             error("Directive has bad argument!", line)
             return er
@@ -424,6 +427,7 @@ def parse_drct(tokens, symbols, code, line):
     ##################################################
     # [drct_p]
     elif(tokens[0][0] in {"<drct_p>", "<08nm>"}):
+        drct_p = tokens[0][1]
         if(tokens[0][0] == "<08nm>"):
             if(tokens[0][1] != "DB"):
                 return 0
@@ -433,7 +437,7 @@ def parse_drct(tokens, symbols, code, line):
         if(not tokens):
             error("Directive missing argument!",line)
             return er
-        expr = parse_expr(tokens, symbols, code, line)
+        expr = parse_expr(*args)
         if(not expr):
             error("Directive has bad argument!",line)
             return er
@@ -449,7 +453,7 @@ def parse_drct(tokens, symbols, code, line):
             if(not tokens):
                 error("Directive missing last argument or has extra comma!",line)
                 return er
-            expr = parse_expr(tokens, symbols, code, line)
+            expr = parse_expr(*args)
             if(not expr):
                 error("Directive has bad argument!",line)
                 return er
@@ -457,8 +461,8 @@ def parse_drct(tokens, symbols, code, line):
                 return er
             data.append(expr)
 
-        args = [x[1:] for x in data[2:] if x[0] != "<comma>"]
-        directives[data[1][1]][0](args,symbols,code,line)
+        d_args = [x[1:] for x in data[2:] if x[0] != "<comma>"]
+        directives[drct_p][0](d_args,symbols,code,line)
         return data
     ##################################################
     # [drct_w]
@@ -471,7 +475,7 @@ def parse_drct(tokens, symbols, code, line):
         if(not tokens):
             error("Directive missing argument!",line)
             return er
-        expr = parse_expr(tokens, symbols, code, line)
+        expr = parse_expr(*args)
         if(not expr):
             error("Directive has bad argument!",line)
             return er
@@ -491,6 +495,7 @@ def parse_drct(tokens, symbols, code, line):
 
 ######################################################
 def parse_code(tokens, symbols, code, line):
+    args = [tokens, symbols, code, line]
     data = ["<code>"]
     er = ["<error>"]
     if not tokens:
@@ -516,7 +521,7 @@ def parse_code(tokens, symbols, code, line):
             error("Instruction missing argument!",line)
             return er
 
-        expr = parse_expr(tokens, symbols, code, line)
+        expr = parse_expr(*args)
         if(not expr):
             error("Instruction has bad argument!")
             return er
@@ -601,14 +606,14 @@ def parse_code(tokens, symbols, code, line):
         if(not tokens):
             error("Instruction missing argument!",line)
             return er
-        expr = parse_expr(tokens, symbols, code, line)
+        expr = parse_expr(*args)
         if(not expr):
             error("Instruction has bad argument!",line)
             return er
         elif(expr == er):
             return er
-        instStr = inst+" "+reg
         data.append(expr)
+        instStr = inst+" "+reg
 
         expr_str = " ".join([x[1] for x in expr[1:]])
         if(instStr in instructions.instructions):
