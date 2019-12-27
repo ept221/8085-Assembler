@@ -137,7 +137,7 @@ Defines and reserves the next n-bytes for storage.
 ;*******************************************************************************
             JMP END 
 Storage:    DS  0x05
-		        LDA Storage
+            LDA Storage
 END:        OUT 42
 ;*******************************************************************************
 ; Assembles to the following:
