@@ -52,5 +52,10 @@ Label definitions may be any string ending with a colon, where the string does n
         MVI A, 0x5C
   Foo:  DCR A         ; Label definition
         JNZ Foo       ; Jump-not-zero to Foo
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
+        MVI A, 0x5C
+  FD:   DCR A         ; Illegal. Label definition cannot match hex constant format
+        JNZ FD
 ```
 ### Directives
