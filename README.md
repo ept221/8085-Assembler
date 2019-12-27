@@ -64,10 +64,15 @@ Label definitions may be any string ending with a colon, where the string does n
         JNZ FD
 ```
 ### Directives
-#### ORG
+#### ORG <16-bit-address>
 Sets the origin to the given address.
-```
-Syntax: ORG 16-bit-address
+```asm
+      MVI A, 55
+      OUT 42
+      JMP Foo
+Foo:  ORG 0x0044
+      MVI A, 32
+      OUT 42
 ```
 #### DB
 #### EQU
