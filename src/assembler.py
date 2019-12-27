@@ -125,7 +125,7 @@ def output(code, name, args):
         print('{:<20}'.format("Hex Code"),file=f,end='')
         width += 20
     if args.comment:
-        print('{:<20}'.format("Hex Code"),file=f,end='')
+        print('{:<20}'.format("Comment"),file=f,end='')
         width += 20
 
     if width:
@@ -171,7 +171,9 @@ def org(arg, symbols, code, line):
         return
 
 def db(args, symbols, code, line):
+    print(args)
     for expr in args:
+        print(expr)
         val = evaluate(expr, symbols, code)
         if(len(val) == 1):
             num = val[0]
@@ -183,10 +185,10 @@ def db(args, symbols, code, line):
                 return 0
             else:
                 code.write(num,line,instrct="DB")
-                return 1
         else:
             error("Expression depends on unresolved symbol!",line)
             return 0
+    return 1
 
 def equ(args, symbols, code, line):
     name = args[0][1]
