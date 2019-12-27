@@ -104,7 +104,7 @@ Writes one or more data bytes sequentially into memory.
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, 33.          0x3E                
+0x0000              MVI A, 33           0x3E                
 0x0001                                  0x33                
 0x0002              DB                  0x44                
 0x0003              DB                  0xFE                
