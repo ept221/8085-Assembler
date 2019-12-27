@@ -28,7 +28,7 @@ The assembler is case insensitive.
 ### Comments
 Comments begin with semicolons.
 ```asm
-MVI A, 0x5C ; This is a comment.
+MVI A, 0x5C   ;This is a comment.
 ```
 
 ### Constants
