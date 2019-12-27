@@ -44,8 +44,8 @@ LXI 3B7     ; Illegal. 16-bit constants must have four digits
 ```
 If an 8-bit constant is given where a 16-bit constant is expected, the 8-bit constant will be converted to a 16-bit constant, with the upper 8-bits all zero.
 ```asm
-JNZ 0x3FC7  ; A jump to 0x3FC7
-JMP FF      ; JMP takes a 16-bit argument, but given 8-bits. Will JMP to 0x00FF.
+JNZ 0x3FC7  ; Jump-not-zero to 0x3FC7
+JMP FF      ; JMP takes a 16-bit argument, but given 8-bits. Will JMP to 0x00FF
 ```
 
 ### Label Definitions
