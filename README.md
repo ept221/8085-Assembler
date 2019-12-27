@@ -116,9 +116,9 @@ Address             Instruction         Hex Code
 ```asm
 ; Example
 ;***********************************************************
-      foo equ 0x55
-      MVI A,  0x33
-      JMP foo
+      foo equ 0xC5F3
+      MVI A, 0x33
+      LXI H, foo
 ;***********************************************************
 ; Assembles to the following:
 
@@ -126,9 +126,9 @@ Address             Instruction         Hex Code
 ------------------------------------------------------------
 0x0000              MVI A, 0X33         0x3E                
 0x0001                                  0x33                
-0x0002              JMP FOO             0xC3                
-0x0003                                  0x55                
-0x0004                                  0x00    
+0x0002              LXI H, FOO          0x21                
+0x0003                                  0xF3                
+0x0004                                  0xC5      
 ```
 #### DS
 ### Expressions
