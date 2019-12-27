@@ -117,14 +117,14 @@ Equates a symbol with a number.
 ; Example
 ;***********************************************************
       foo EQU 0xC5F3
-      MVI A,  0x33
+      MVI A,  33
       LXI H,  foo
 ;***********************************************************
 ; Assembles to the following:
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, 0X33         0x3E                
+0x0000              MVI A, 33           0x3E                
 0x0001                                  0x33                
 0x0002              LXI H, FOO          0x21                
 0x0003                                  0xF3                
