@@ -28,17 +28,19 @@ The assembler is case insensitive.
 ### Comments
 Comments begin with semicolons.
 ```asm
-MVI A, 0x5C   ; This is a comment.
+MVI A, 0x5C   ; This is a comment
 ```
 
 ### Constants
 8 and 16-bit constants are given in hex. 8-bit constants must have two digits, and 16-bit constants must have 4-digits.
 ```asm
-MVI A, 0x5C
-MVI A, 5C   ; The "0x" is optional
+MVI A, 0x0C
+MVI A, 0C   ; The "0x" is optional
+MVI A, 7    ; Illegal. 8-bit constants must have two digits
 
 LXI 0x03B7
 LXI 03B7    ; The "0x" is optional
+LXI 3B7     ; Illegal. 16-bit constants must have four digits
 ```
 
 ### Label Definitions
