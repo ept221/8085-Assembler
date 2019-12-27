@@ -1,5 +1,8 @@
 # 8085-Assembler
 
+A simple 8085 assembler.
+
+## Usage
 ```
 usage: assembler.py [-h] [-L] [-A] [-B] [-I] [-H] [-C] [-s] [-o OUT] source
 
@@ -19,3 +22,15 @@ optional arguments:
   -s, --standard     equivalent to -A -B -I -H -C
   -o OUT, --out OUT  output file name (stdout, if not specified)
   ```
+## Source File Syntax
+The assembler is case insensitive.
+
+### Comments
+Comments begin with ";"
+
+### Constants
+8-bit constants are given in hex:
+
+### Label Definitions
+Label definitions may be any string ending with a colon, where the string does not match the pattern of an 8 or 16-bit constant.
+### Directives
