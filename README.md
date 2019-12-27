@@ -116,7 +116,7 @@ Equates a symbol with a number.
 ```asm
 ; Example
 ;***********************************************************
-      foo equ 0xC5F3
+      foo EQU 0xC5F3
       MVI A,  0x33
       LXI H,  foo
 ;***********************************************************
@@ -130,5 +130,24 @@ Address             Instruction         Hex Code
 0x0003                                  0xF3                
 0x0004                                  0xC5      
 ```
-#### DS
+#### DS <8 or 16-bit number>
+Defines and reserves the next n-bytes for storage.
+```asm
+; Example
+;*******************************************************************************
+            JMP END 
+Storage:    DS 0x05
+END:        OUT 42
+;*******************************************************************************
+; Assembles to the following:
+
+Address             Label               Instruction         Hex Code            
+--------------------------------------------------------------------------------
+0x0000                                  JMP END             0xC3                
+0x0001                                                      0x08                
+0x0002                                                      0x00                
+0x0008              END:                OUT 42              0xD3                
+0x0009                                                      0x42                
+```
+
 ### Expressions
