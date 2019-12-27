@@ -117,8 +117,8 @@ Address             Instruction         Hex Code
 ; Example
 ;***********************************************************
       foo equ 0xC5F3
-      MVI A, 0x33
-      LXI H, foo
+      MVI A,  0x33
+      LXI H,  foo
 ;***********************************************************
 ; Assembles to the following:
 
