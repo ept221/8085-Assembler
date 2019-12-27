@@ -96,11 +96,11 @@ Address             Label               Instruction         Hex Code
 Writes one or more data bytes sequentially into memory.
 ```asm
 ; Example
-;*******************************************************************************
+;***********************************************************
       MVI A, 0x33
       DB     0x44, 0xFE, 0x9C
       HLT
-;*******************************************************************************
+;***********************************************************
 ; Assembles to the following:
 
 Address             Instruction         Hex Code            
