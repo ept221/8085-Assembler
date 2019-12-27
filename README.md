@@ -136,7 +136,8 @@ Defines and reserves the next n-bytes for storage.
 ; Example
 ;*******************************************************************************
             JMP END 
-Storage:    DS 0x05
+Storage:    DS  0x05
+		        LDA Storage
 END:        OUT 42
 ;*******************************************************************************
 ; Assembles to the following:
@@ -144,10 +145,13 @@ END:        OUT 42
 Address             Label               Instruction         Hex Code            
 --------------------------------------------------------------------------------
 0x0000                                  JMP END             0xC3                
-0x0001                                                      0x08                
+0x0001                                                      0x0B                
 0x0002                                                      0x00                
-0x0008              END:                OUT 42              0xD3                
-0x0009                                                      0x42                
+0x0008              STORAGE:            LDA STORAGE         0x3A                
+0x0009                                                      0x03                
+0x000A                                                      0x00                
+0x000B              END:                OUT 42              0xD3                
+0x000C                                                      0x42              
 ```
 
 ### Expressions
