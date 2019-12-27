@@ -127,26 +127,29 @@ def output(code, name, args):
     if args.comment:
         print('{:<20}'.format("Hex Code"),file=f,end='')
         width += 20
-    print(file=f)
+
+    if width:
+        print(file=f)
 
     for i in range(0,width):
         print("-",file=f,end='')
-    print(file=f)
 
-    for l in code.data:
-        if args.lineNum:
-            print('{:<20}'.format(l[1]),file=f,end='')
-        if args.address:
-            print('{:<20}'.format(l[2]),file=f,end='')
-        if args.label:
-            print('{:<20}'.format(l[3]),file=f,end='')
-        if args.instruction:
-            print('{:<20}'.format(l[4]),file=f,end='')
-        if args.hex:
-            print('{:<20}'.format(l[5]),file=f,end='')
-        if args.comment:
-            print('{:<20}'.format(l[6]),file=f,end='')
+    if width:
         print(file=f)
+        for l in code.data:
+            if args.lineNum:
+                print('{:<20}'.format(l[1]),file=f,end='')
+            if args.address:
+                print('{:<20}'.format(l[2]),file=f,end='')
+            if args.label:
+                print('{:<20}'.format(l[3]),file=f,end='')
+            if args.instruction:
+                print('{:<20}'.format(l[4]),file=f,end='')
+            if args.hex:
+                print('{:<20}'.format(l[5]),file=f,end='')
+            if args.comment:
+                print('{:<20}'.format(l[6]),file=f,end='')
+            print(file=f)
 
     if f is not sys.stdout:
         f.close()
