@@ -47,8 +47,10 @@ LXI 3B7     ; Illegal. 16-bit constants must have four digits
 Label definitions may be any string ending with a colon, where the string does not match the pattern of an 8 or 16-bit constant.
 
 ```asm
+  ; A simple loop
+  
         MVI A, 0x5C
-  Foo:  DCR A
-        JNZ Foo
+  Foo:  DCR A         ; Label definition
+        JNZ Foo       ; Jump-not-zero to Foo
 ```
 ### Directives
