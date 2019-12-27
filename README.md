@@ -72,8 +72,8 @@ Sets the origin to the given address.
         MVI A, 55
         OUT 42
         JMP Start
-Start:  ORG 0x44
-        MVI A, 32
+        ORG 0x44
+Start:  MVI A, 32
         OUT 42
 ;*******************************************************************************
 ; Assembles to the following:
