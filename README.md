@@ -92,7 +92,14 @@ Address             Label               Instruction         Hex Code
 0x0046                                  OUT 42              0xD3                
 0x0047                                                      0x42  
 ```
-#### DB
+#### DB <8-bit-data>, ...
+Writes one or more data bytes sequentially into memory.
+```asm
+; Example
+;*******************************************************************************
+MVI A, 0x33
+DB 0x44, 0xFE, 0x9C
+```
 #### EQU
 #### DS
 ### Expressions
