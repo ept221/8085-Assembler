@@ -28,11 +28,18 @@ The assembler is case insensitive.
 ### Comments
 Comments begin with semicolons.
 ```asm
-MVI A, 0x5C   ;This is a comment.
+MVI A, 0x5C   ; This is a comment.
 ```
 
 ### Constants
-8-bit constants are given in hex:
+8 and 16-bit constants are given in hex:
+```asm
+MVI A, 0x5C
+MVI A, 5C   ; The "0x" is optional
+
+LXI 0x03B7
+LXI 03B7    ; The "0x" is optional
+```
 
 ### Label Definitions
 Label definitions may be any string ending with a colon, where the string does not match the pattern of an 8 or 16-bit constant.
