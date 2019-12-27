@@ -68,14 +68,16 @@ Label definitions may be any string ending with a colon, where the string does n
 Sets the origin to the given address.
 ```asm
 ; Example
-;************************
+;*******************************************************************************
         MVI A, 55
         OUT 42
         JMP Start
 Start:  ORG 0x44
         MVI A, 32
         OUT 42
-; Assembles to:
+;*******************************************************************************
+; Assembles to the following:
+
 Address             Label               Instruction         Hex Code            
 --------------------------------------------------------------------------------
 0x0000                                  MVI A, 55           0x3E                
