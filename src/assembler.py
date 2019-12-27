@@ -5,6 +5,7 @@
 ##############################################################################################################
 import re
 import sys
+import argparse
 import table
 import instructions
 
@@ -27,26 +28,28 @@ class Code:
         self.label = ""
 
     def write(self, data, line, instrct = ""):
-        # Format: [line] [address] [label] [instruction + argument] [hex code] [comment] [expr]
+        # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment] [expr]
 
-        lineNum = line[0][0]
         addressStr = '0x{0:0{1}X}'.format(self.address,4)
 
         if(data != "expr"):
             data = '0x{0:0{1}X}'.format(data,2)
 
         comment = ''
+        lineNumStr = ''
         pc = line[0][1]
+
         if(len(self.data) == 0 or pc != self.data[-1][0][0][1]):
             comment = line[2]
+            lineNumStr = str(line[0][0])
 
-        self.data.append([line, addressStr, self.label, instrct, data, comment])
+        self.data.append([line, lineNumStr, addressStr, self.label, instrct, data, comment])
         self.address += 1
         self.label = ""
 
     def update(self, data, index):
 
-        self.data[index][4] = '0x{0:0{1}X}'.format(data,2)
+        self.data[index][5] = '0x{0:0{1}X}'.format(data,2)
 
 
 ##############################################################################################################
@@ -104,13 +107,49 @@ def read(name):
 def error(message, line):
     print("Error at line " + str(line[0][0]) + ": " + message)
 
-def output(code, name):
+def output(code, name, args):
     # Format: [line] [address] [label] [instruction + argument] [hex code]
     f = open(name,'w') if name else sys.stdout
-    print('{:<20}{:<20}{:<20}{:<20}{:<20}'.format("Address","Label","Instruction","Hex Code","Comment"),file=f)
-    print("----------------------------------------------------------------------------------------------------------------------------------",file=f)
+
+    width = 0;
+    if args.lineNum:
+        print('{:<20}'.format("Line number"),file=f,end='')
+        width += 20
+    if args.address:
+        print('{:<20}'.format("Address"),file=f,end='')
+        width += 20
+    if args.label:
+        print('{:<20}'.format("Label"),file=f,end='')
+        width += 20
+    if args.instruction:
+        print('{:<20}'.format("Instruction"),file=f,end='')
+        width += 20
+    if args.hex:
+        print('{:<20}'.format("Hex Code"),file=f,end='')
+        width += 20
+    if args.comment:
+        print('{:<20}'.format("Hex Code"),file=f,end='')
+        width += 20
+    print(file=f)
+
+    for i in range(0,width):
+        print("-",file=f,end='')
+    print(file=f)
+
     for l in code.data:
-        print('{:<20}{:<20}{:<20}{:<20}{:<20}'.format(l[1],l[2],l[3],l[4],l[5]),file=f)
+        if args.lineNum:
+            print('{:<20}'.format(l[1]),file=f,end='')
+        if args.address:
+            print('{:<20}'.format(l[2]),file=f,end='')
+        if args.label:
+            print('{:<20}'.format(l[3]),file=f,end='')
+        if args.instruction:
+            print('{:<20}'.format(l[4]),file=f,end='')
+        if args.hex:
+            print('{:<20}'.format(l[5]),file=f,end='')
+        if args.comment:
+            print('{:<20}'.format(l[6]),file=f,end='')
+        print(file=f)
 
     if f is not sys.stdout:
         f.close()
@@ -205,12 +244,12 @@ directives = {
 }
      
 def secondPass(symbols, code):
-    # Format: [line] [address] [label] [instruction + argument] [hex code] [comment]
+    # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment] [expr]
     i = 0
     while i < len(code.data):
         codeLine = code.data[i]
         line = codeLine[0]
-        data = codeLine[4]
+        data = codeLine[5]
         symbol = ""
         if(data == "expr"):
             expr, kind  = symbols.expr.pop(0)
@@ -739,20 +778,29 @@ def parse_line(tokens, symbols, code, line):
 code = Code()
 symbols = Symbol()
 
-callArgs = sys.argv
-inFile =""
 outFile = ""
+discription = 'A simple 8085 assembler.'
 
-if(len(sys.argv) > 1):
-    inFile = sys.argv[1]
-    if(len(sys.argv) > 2):
-        outFile = sys.argv[2]
-        if(len(sys.argv) > 3):
-            print("Error: Too many commandline arguments!")
-            exit()
-else:
-    print("Error: No input file given!")
-    exit()
+p = argparse.ArgumentParser(description = discription)
+p.add_argument("source", help="source file")
+p.add_argument("-L", "--lineNum", help="include the line number in output", action="store_true")
+p.add_argument("-A", "--address", help="include the address in output", action="store_true")
+p.add_argument("-B", "--label",   help="include the labels in output", action="store_true")
+p.add_argument("-I", "--instruction", help="include the instructions and arguments in output", action="store_true")
+p.add_argument("-H", "--hex", help="include the hex code in output", action="store_true")
+p.add_argument("-C", "--comment", help="include the comments in output", action="store_true")
+p.add_argument("-s", "--standard", help="equivalent to -A -B -I -H -C", action="store_true")
+p.add_argument("-o", "--out", help="output file name (stdout, if not specified)")
+args = p.parse_args();
 
-parse(read(inFile),symbols,code)
-output(code,outFile)
+if(args.standard and (args.address or args.label or args.instruction and args.hex and args.comment)):
+    p.error("-s is mutually exclusive with (-A, -B, -I, -H, -C")
+
+if(args.source):
+    outFile = args.source
+
+if(args.standard):
+    args.address, args.label, args.instruction, args.hex, args.comment = True, True, True, True, True;
+
+parse(read(args.source),symbols,code)
+output(code, (args.out if args.out else ""), args)
