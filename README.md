@@ -99,6 +99,17 @@ Writes one or more data bytes sequentially into memory.
 ;*******************************************************************************
 MVI A, 0x33
 DB 0x44, 0xFE, 0x9C
+;*******************************************************************************
+; Assembles to the following:
+
+Address             Instruction         Hex Code            
+------------------------------------------------------------
+0x0000              MVI A, 0X33         0x3E                
+0x0001                                  0x33                
+0x0002              DB                  0x44                
+0x0003              DB                  0xFE                
+0x0004              DB                  0x9C                
+0x0005              HLT                 0x76  
 ```
 #### EQU
 #### DS
