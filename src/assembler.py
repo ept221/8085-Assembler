@@ -1,7 +1,6 @@
 # Notes:
 # -> Put restrictions on valid symbol and label entries
 # -> Add decimal and binary base functionality
-# -> Add command line argument flags to modify the output format 
 ##############################################################################################################
 import re
 import sys
@@ -10,7 +9,7 @@ import table
 import instructions
 
 ##############################################################################################################
-# Experimental Code Classes
+# Support Classes
 
 class Symbol:
 
