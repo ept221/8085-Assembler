@@ -64,5 +64,8 @@ Label definitions may be any string ending with a colon, where the string does n
         JNZ FD
 ```
 ### Directives
-
+#### ORG
+#### DB
+#### EQU
+#### DS
 ### Expressions
