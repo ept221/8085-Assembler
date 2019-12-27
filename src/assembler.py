@@ -748,8 +748,11 @@ if(len(sys.argv) > 1):
     if(len(sys.argv) > 2):
         outFile = sys.argv[2]
         if(len(sys.argv) > 3):
-            print("Error: Too many commandline arguments!");
+            print("Error: Too many commandline arguments!")
             exit()
+else:
+    print("Error: No input file given!")
+    exit()
 
 parse(read(inFile),symbols,code)
 output(code,outFile)
