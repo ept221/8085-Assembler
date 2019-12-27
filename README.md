@@ -58,7 +58,6 @@ Label definitions may be any string ending with a colon, where the string does n
   Foo:  DCR A         ; Label definition
         JNZ Foo       ; Jump-not-zero to Foo
   ;*******************************************************************************
-  
         MVI A, 0x5C
   FD:   DCR A         ; Illegal. Label definition cannot match hex constant format
         JNZ FD
@@ -112,7 +111,8 @@ Address             Instruction         Hex Code
 0x0004              DB                  0x9C                
 0x0005              HLT                 0x76  
 ```
-#### EQU
+#### <symbol> EQU <8 or 16-bit number>
+Equates a symbol with a number.
 ```asm
 ; Example
 ;***********************************************************
