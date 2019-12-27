@@ -802,7 +802,7 @@ if(args.source):
     outFile = args.source
 
 if(args.standard):
-    args.address, args.label, args.instruction, args.hex, args.comment = True, True, True, True, True;
+    args.address, args.label, args.instruction, args.hex, args.comment = True, True, True, True, True
 
 parse(read(args.source),symbols,code)
 output(code, (args.out if args.out else ""), args)
