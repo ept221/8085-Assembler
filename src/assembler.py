@@ -38,7 +38,6 @@ class Code:
         comment = ''
         lineNumStr = ''
         pc = line[0][1]
-
         if(len(self.data) == 0 or pc != self.data[-1][0][0][1]):
             comment = line[2]
             lineNumStr = str(line[0][0])
