@@ -52,8 +52,8 @@ JMP FF      ; JMP takes a 16-bit argument, but given 8-bits. Will JMP to 0x00FF
 Label definitions may be any string ending with a colon, where the string does not match the pattern of an 8 or 16-bit constant.
 
 ```asm
-  ; A simple loop
-  
+  ; Example
+  ;*******************************************************************************
         MVI A, 0x5C
   Foo:  DCR A         ; Label definition
         JNZ Foo       ; Jump-not-zero to Foo
