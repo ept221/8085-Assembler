@@ -334,7 +334,7 @@ def evaluate(expr, symbols, code):
 #          | <mnm_1_e> <reg> "," <expr>
 #          | <mnm_2> <reg> "," <reg>
 #
-# <expr> ::= [ (<plus> | <minus>) ] <numb> { (<plus> | <minus> <numb> }
+# <expr> ::= [ (<plus> | <minus>) ] <numb> { (<plus> | <minus>) <numb> }
 #
 # <drct> ::= <drct_1> <expr>
 #          | <drct_p> <expr> { ","  <expr> }
@@ -368,7 +368,7 @@ def parse_expr(tokens, symbols, code, line):
         if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>", "<lc>"}):
             if(tokens[0][0] not in {"<plus>", "<minus>"}):
                 if(len(data) > 1):
-                    error("Expression had bad identifier!",line)
+                    error("Expression has bad identifier!",line)
                     return er
                 else:
                     return 0
@@ -727,7 +727,7 @@ def parse_line(tokens, symbols, code, line):
     # check to see if we have any
     # tokens left
     if(len(tokens)):   
-        error("Bad Identifier!",line)
+        error("Bad Final Identifier!",line)
         return er
     ###############################
     # everything's good
@@ -743,11 +743,13 @@ callArgs = sys.argv
 inFile =""
 outFile = ""
 
-if(len(sys.argv) == 3):
+if(len(sys.argv) > 1):
     inFile = sys.argv[1]
-    outFile = sys.argv[2]
-else:
-    inFile = "program.asm"
+    if(len(sys.argv) > 2):
+        outFile = sys.argv[2]
+        if(len(sys.argv) > 3):
+            print("Error: Too many commandline arguments!");
+            exit()
 
 parse(read(inFile),symbols,code)
 output(code,outFile)
