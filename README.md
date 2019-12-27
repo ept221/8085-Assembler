@@ -43,6 +43,10 @@ LXI 03B7    ; The "0x" is optional
 LXI 3B7     ; Illegal. 16-bit constants must have four digits
 ```
 If an 8-bit constant is given where a 16-bit constant is expected, the 8-bit constant will be converted to a 16-bit constant, with the upper 8-bits all zero.
+```asm
+JNZ 0x3FC7  ; A jump to 0x3FC7
+JMP FF      ; JMP takes a 16-bit argument, but given 8-bits. Will JMP to 0x00FF.
+```
 
 ### Label Definitions
 Label definitions may be any string ending with a colon, where the string does not match the pattern of an 8 or 16-bit constant.
