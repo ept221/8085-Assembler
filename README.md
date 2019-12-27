@@ -66,7 +66,9 @@ Label definitions may be any string ending with a colon, where the string does n
 ### Directives
 #### ORG
 Sets the origin to the given address.
+```
 Syntax: ORG 16-bit-address
+```
 #### DB
 #### EQU
 #### DS
