@@ -75,6 +75,20 @@ Sets the origin to the given address.
 Start:  ORG 0x44
         MVI A, 32
         OUT 42
+; Assembles to:
+Address             Label               Instruction         Hex Code            
+--------------------------------------------------------------------------------
+0x0000                                  MVI A, 55           0x3E                
+0x0001                                                      0x55                
+0x0002                                  OUT 42              0xD3                
+0x0003                                                      0x42                
+0x0004                                  JMP START           0xC3                
+0x0005                                                      0x07                
+0x0006                                                      0x00                
+0x0044              START:              MVI A, 32           0x3E                
+0x0045                                                      0x32                
+0x0046                                  OUT 42              0xD3                
+0x0047                                                      0x42  
 ```
 #### DB
 #### EQU
