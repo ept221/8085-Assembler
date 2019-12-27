@@ -96,7 +96,7 @@ Writes one or more data bytes sequentially into memory.
 ```asm
 ; Example
 ;***********************************************************
-      MVI A, 0x33
+      MVI A, 33
       DB     0x44, 0xFE, 0x9C
       HLT
 ;***********************************************************
@@ -104,7 +104,7 @@ Writes one or more data bytes sequentially into memory.
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, 0X33         0x3E                
+0x0000              MVI A, 33.          0x3E                
 0x0001                                  0x33                
 0x0002              DB                  0x44                
 0x0003              DB                  0xFE                
