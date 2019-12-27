@@ -26,7 +26,10 @@ optional arguments:
 The assembler is case insensitive.
 
 ### Comments
-Comments begin with ";"
+Comments begin with semicolons.
+```asm
+MVI A, 0x5C ; This is a comment.
+```
 
 ### Constants
 8-bit constants are given in hex:
