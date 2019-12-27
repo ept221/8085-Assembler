@@ -1,5 +1,4 @@
 # Notes:
-# -> Put restrictions on valid symbol and label entries
 # -> Add decimal and binary base functionality
 ##############################################################################################################
 import re
@@ -248,7 +247,6 @@ def secondPass(symbols, code):
         codeLine = code.data[i]
         line = codeLine[0]
         data = codeLine[5]
-        symbol = ""
         if(data == "expr"):
             expr, kind  = symbols.expr.pop(0)
             val = evaluate(expr, symbols, code)
@@ -270,7 +268,6 @@ def secondPass(symbols, code):
                         i += 1
             else:
                 error("Expression relies on unresolved symbol!",line)
-                print(expr)
         i += 1
 
 def lexer(lines):
@@ -316,7 +313,7 @@ def lexer(lines):
                 tl.append(["<lc>", word])
             else:
                 tl.append(["<idk_man>", word])
-                error("Uknown token!", line)
+                error("Unknown token!", line)
                 print("=",word)
         tokens.append(tl)
 
@@ -426,6 +423,10 @@ def parse_lbl_def(tokens, symbols, code, line):
             return er
         elif lbl[:-1] in table.reserved:
             error("Label cannot be keyword!",line)
+            return er
+        elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', lbl[:-1]) or
+             re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', lbl[:-1])):
+            error("Label cannot be hex number!",line)
             return er
         elif lbl[:-1] in (symbols.eightBitDefs, symbols.sixteenBitDefs):
             error("Label conflicts with previous symbol definition",line)
@@ -560,7 +561,7 @@ def parse_code(tokens, symbols, code, line):
 
         expr = parse_expr(*args)
         if(not expr):
-            error("Instruction has bad argument!")
+            error("Instruction has bad argument!",line)
             return er
         if(expr == er):
             return er
