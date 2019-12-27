@@ -38,9 +38,9 @@ MVI A, 0x0C
 MVI A, 0C   ; The "0x" is optional
 MVI A, 7    ; Illegal. 8-bit constants must have two digits
 
-LXI 0x03B7
-LXI 03B7    ; The "0x" is optional
-LXI 3B7     ; Illegal. 16-bit constants must have four digits
+LXI H, 0x03B7
+LXI H, 03B7    ; The "0x" is optional
+LXI H, 3B7     ; Illegal. 16-bit constants must have four digits
 ```
 If an 8-bit constant is given where a 16-bit constant is expected, the 8-bit constant will be converted to a 16-bit constant, with the upper 8-bits all zero.
 ```asm
