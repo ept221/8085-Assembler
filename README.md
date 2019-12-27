@@ -67,12 +67,14 @@ Label definitions may be any string ending with a colon, where the string does n
 #### ORG <16-bit-address>
 Sets the origin to the given address.
 ```asm
-      MVI A, 55
-      OUT 42
-      JMP Foo
-Foo:  ORG 0x0044
-      MVI A, 32
-      OUT 42
+; Example
+;************************
+        MVI A, 55
+        OUT 42
+        JMP Start
+Start:  ORG 0x44
+        MVI A, 32
+        OUT 42
 ```
 #### DB
 #### EQU
