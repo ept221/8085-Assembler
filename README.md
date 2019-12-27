@@ -32,7 +32,7 @@ MVI A, 0x5C   ; This is a comment.
 ```
 
 ### Constants
-8 and 16-bit constants are given in hex:
+8 and 16-bit constants are given in hex. 8-bit constants must have two digits, and 16-bit constants must have 4-digits.
 ```asm
 MVI A, 0x5C
 MVI A, 5C   ; The "0x" is optional
