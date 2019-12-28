@@ -155,3 +155,4 @@ Address             Label               Instruction         Hex Code
 ```
 
 ### Expressions
+Anytime an instruction or directived requires a numerical argument, an expression can be used.
