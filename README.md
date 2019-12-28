@@ -155,7 +155,7 @@ Address             Label               Instruction         Hex Code
 ```
 
 ## Expressions
-Anytime an instruction or directive requires a numerical argument, an expression can be used. Supported operations inside expressions include addition and and subtraction, and the location counter $ is also made available. Expressions may contain symbols, but must resolve within two passes of the assembler, and if used for directive arguments, must resolve in a single pass. All expressions must evaluate to a positive number.
+Anytime an instruction or directive requires a numerical argument, an expression can be used. Supported operations inside expressions include addition and subtraction. The location counter $ is also made available. Expressions may contain symbols, but must resolve within two passes of the assembler, and if used for directive arguments, must resolve in a single pass. All expressions must evaluate to a positive number.
 ```asm
 ; Example with expression resolution in one pass.
 ;***********************************************************
