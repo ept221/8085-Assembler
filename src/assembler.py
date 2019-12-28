@@ -165,6 +165,9 @@ def org(arg, symbols, code, line):
         if(num < 0):
             error("Expression must be positive!",line)
             return 0
+        elif(num < code.address):
+            error("Cannot move origin backwards!",line)
+            return 0
         elif(num > 65535):
             error("Cannot set origin past 0xFFFF!",line)
             return 0
