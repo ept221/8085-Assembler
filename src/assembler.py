@@ -160,13 +160,15 @@ def org(arg, symbols, code, line):
         num = val[0]
         if(num < 0):
             error("Expression must be positive!",line)
-            return
+            return 0
         else:
             code.address = num
+            if(code.label):
+                symbols.labelDefs[code.label[:-1]] = '{0:0{1}X}'.format(num,4)
             return 1
     else:
         error("Expression depends on unresolved symbol!",line)
-        return
+        return 0
 
 def db(args, symbols, code, line):
     for expr in args:
