@@ -157,7 +157,7 @@ Address             Label               Instruction         Hex Code
 ## Expressions
 Anytime an instruction or directive requires a numerical argument, an expression can be used. Supported operations inside expressions include addition and and subtraction, and the location counter $ is also made available. Expressions may contain symbols, but must resolve within two passes of the assembler, and if used for directive arguments, must resolve in a single pass. All expressions must evaluate to a positive number.
 ```asm
-; Example
+; Example with expression resolution in one pass.
 ;***********************************************************
       foo    EQU   10
       MVI A, foo - 04
@@ -168,10 +168,9 @@ Address             Instruction         Hex Code
 ------------------------------------------------------------
 0x0000              MVI A, FOO - 04     0x3E                
 0x0001                                  0x0C     
-```
 
-```asm
-; Example
+
+; Example with expression resolution in two passes.
 ;***********************************************************
       MVI A, foo + 04
       foo    EQU   30
