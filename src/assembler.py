@@ -197,7 +197,7 @@ def equ(args, symbols, code, line):
         error("Symbol already defined!",line)
         return 0
     elif(name in symbols.labelDefs):
-        error("Symbol conflicts with previous labelDef!",line)
+        error("Symbol conflicts with previous label definition!",line)
         return 0
 
     val = evaluate(args[1], symbols, code.address)
@@ -205,7 +205,7 @@ def equ(args, symbols, code, line):
         num = val[0]
         if num > 65535:
             error("Expression evaluates to value greater than 0xFFFF!",line)
-            return
+            return 0
         elif num > 255:
             symbols.sixteenBitDefs[name] = '{0:0{1}X}'.format(num,4)
             return 1
@@ -228,10 +228,10 @@ def ds(arg, symbols, code, line):
             return 0
         else:
             code.address += num
-            return
+            return 1
     else:
         error("Expression depends on unresolved symbol!",line)
-        return 1
+        return 0
 
 directives = {
     #Format:
@@ -258,20 +258,24 @@ def secondPass(symbols, code):
                 numb = val[0]
                 if(numb < 0):
                     error("Expression must be positive!",line)
+                    return 0
                 elif(kind == "data"):
                     if(numb > 255):
                         error("Expression must evaluate to 8-bit number!",line)
+                        return 0
                     else:
                         code.update(numb,i)
                 elif(kind == "address"):
                     if(numb > 65535):
                         error("Expression must evaluate to 16-bit number!",line)
+                        return 0
                     else:
                         code.update((numb & 0xff),i)
                         code.update((numb >> 8),i+1)
                         i += 1
             else:
                 error("Expression relies on unresolved symbol!",line)
+                return 0
         else:
             address = int(codeLine[2], base=16) 
         i += 1
@@ -319,8 +323,9 @@ def lexer(lines):
                 tl.append(["<lc>", word])
             else:
                 tl.append(["<idk_man>", word])
-                error("Unknown token!", line)
-                print("=",word)
+                error("Unknown token: " + word, line)
+                return [0 , 0]
+
         tokens.append(tl)
 
     return [code_lines, tokens]
@@ -385,11 +390,20 @@ def evaluate(expr, symbols, address):
 def parse(lines, symbols, code):
 
     code_lines, tokenLines = lexer(lines)
-    tree = []
-    for tokens, line in zip(tokenLines, code_lines):
-        tree.append(parse_line(tokens, symbols, code, line))
+    if(code_lines == 0):
+        sys.exit(1)
 
-    secondPass(symbols, code)
+    tree = []
+
+    for tokens, line in zip(tokenLines, code_lines):
+        parsed_line = parse_line(tokens, symbols, code, line)
+        if(parsed_line[0] == "<error>"):
+            sys.exit(1)
+        tree.append(parsed_line)
+
+    status = secondPass(symbols, code)
+    if(status == 0):
+        sys.exit(1)
 
 def parse_expr(tokens, symbols, code, line):
     data = ["<expr>"]
@@ -729,6 +743,7 @@ def parse_code(tokens, symbols, code, line):
             code.write(instructions.instructions[instStr],line,instrct=instStr)
         else:
             error("Bad instruction: "+instStr,line)
+            return er
         return data
 
     return 0
