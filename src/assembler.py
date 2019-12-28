@@ -26,7 +26,7 @@ class Code:
         self.label = ""
 
     def write(self, data, line, instrct = ""):
-        # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment] [expr]
+        # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
 
         addressStr = '0x{0:0{1}X}'.format(self.address,4)
 
@@ -103,7 +103,7 @@ def error(message, line):
     print("Error at line " + str(line[0][0]) + ": " + message)
 
 def output(code, name, args):
-    # Format: [line] [address] [label] [instruction + argument] [hex code]
+    # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
     f = open(name,'w') if name else sys.stdout
 
     width = 0;
@@ -155,7 +155,7 @@ def output(code, name, args):
 ##############################################################################################################
 # Directive functions
 def org(arg, symbols, code, line):
-    val = evaluate(arg, symbols, code)
+    val = evaluate(arg, symbols, code.address)
     if(len(val) == 1):
         num = val[0]
         if(num < 0):
@@ -170,7 +170,7 @@ def org(arg, symbols, code, line):
 
 def db(args, symbols, code, line):
     for expr in args:
-        val = evaluate(expr, symbols, code)
+        val = evaluate(expr, symbols, code.address)
         if(len(val) == 1):
             num = val[0]
             if(num < 0):
@@ -198,7 +198,7 @@ def equ(args, symbols, code, line):
         error("Symbol conflicts with previous labelDef!",line)
         return 0
 
-    val = evaluate(args[1], symbols, code)
+    val = evaluate(args[1], symbols, code.address)
     if(len(val) == 1):
         num = val[0]
         if num > 65535:
@@ -218,7 +218,7 @@ def equ(args, symbols, code, line):
         return 0
 
 def ds(arg, symbols, code, line):
-    val = evaluate(arg, symbols, code)
+    val = evaluate(arg, symbols, code.address)
     if(len(val) == 1):
         num = val[0]
         if(num < 0):
@@ -242,15 +242,16 @@ directives = {
 }
      
 def secondPass(symbols, code):
-    # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment] [expr]
+    # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
     i = 0
+    address = 0
     while i < len(code.data):
         codeLine = code.data[i]
         line = codeLine[0]
         data = codeLine[5]
         if(data == "expr"):
             expr, kind  = symbols.expr.pop(0)
-            val = evaluate(expr, symbols, code)
+            val = evaluate(expr, symbols, address)
             if(len(val) == 1):
                 numb = val[0]
                 if(numb < 0):
@@ -269,6 +270,8 @@ def secondPass(symbols, code):
                         i += 1
             else:
                 error("Expression relies on unresolved symbol!",line)
+        else:
+            address = int(codeLine[2], base=16) 
         i += 1
 
 def lexer(lines):
@@ -320,7 +323,7 @@ def lexer(lines):
 
     return [code_lines, tokens]
 ######################################################################################
-def evaluate(expr, symbols, code):
+def evaluate(expr, symbols, address):
     sign, pop, result = 1, 2, 0
     while(expr):
         ###################################
@@ -338,8 +341,7 @@ def evaluate(expr, symbols, code):
             result += sign*int(expr[-1][1], base=16)
             expr = expr[:-pop]
         elif(expr[-1][0] == "<lc>"):
-            print("address = " + str(code.address))
-            result += sign*(code.address-1)
+            result += sign*(address)
             expr = expr[:-pop] 
         else:
             if(expr[-1][1] in symbols.eightBitDefs):
@@ -576,7 +578,7 @@ def parse_code(tokens, symbols, code, line):
             error("Bad instruction: "+inst,line)
             return er
 
-        val = evaluate(expr[1:],symbols,code)
+        val = evaluate(expr[1:],symbols,code.address-1)
         if(len(val) == 1):
             numb = val[0]
             if(numb < 0):
@@ -662,7 +664,7 @@ def parse_code(tokens, symbols, code, line):
             error("Bad instruction: "+instStr,line)
             return er
 
-        val = evaluate(expr[1:],symbols,code)
+        val = evaluate(expr[1:],symbols,code.address-1)
         if(len(val) == 1):
             numb = val[0]
             if(numb < 0):
