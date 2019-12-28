@@ -154,5 +154,5 @@ Address             Label               Instruction         Hex Code
 0x000C                                                      0x42              
 ```
 
-### Expressions
-Anytime an instruction or directived requires a numerical argument, an expression can be used.
+## Expressions
+Anytime an instruction or directive requires a numerical argument, an expression can be used.
