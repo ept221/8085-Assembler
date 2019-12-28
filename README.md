@@ -169,8 +169,8 @@ Address             Instruction         Hex Code
 0x0000              MVI A, FOO - 04     0x3E                
 0x0001                                  0x0C     
 
-
-;###########################################################
+```
+```asm
 ; Example with expression resolution in two passes.
 ;***********************************************************
       MVI A, foo + 04
@@ -182,9 +182,8 @@ Address             Instruction         Hex Code
 ------------------------------------------------------------
 0x0000              MVI A, FOO + 04     0x3E                
 0x0001                                  0x34
-
-
-;###########################################################
+```
+```asm
 ; Example with expression resolution in two passes, and $
 ;***********************************************************
       MVI A,  55
