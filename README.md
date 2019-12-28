@@ -159,7 +159,7 @@ Anytime an instruction or directive requires a numerical argument, an expression
 ```asm
 ; Example
 ;***********************************************************
-      foo    equ   10
+      foo    EQU   10
       MVI A, foo - 04
 ;***********************************************************
 ; Assembles to the following:
@@ -168,4 +168,18 @@ Address             Instruction         Hex Code
 ------------------------------------------------------------
 0x0000              MVI A, FOO - 04     0x3E                
 0x0001                                  0x0C     
+```
+
+```asm
+; Example
+;***********************************************************
+      MVI A, foo + 04
+      foo    EQU   30
+;***********************************************************
+; Assembles to the following:
+
+Address             Instruction         Hex Code            
+------------------------------------------------------------
+0x0000              MVI A, FOO + 04     0x3E                
+0x0001                                  0x34   
 ```
