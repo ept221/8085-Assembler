@@ -28,6 +28,10 @@ class Code:
     def write(self, data, line, instrct = ""):
         # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
 
+        if(self.address > 65535):
+            error("Cannot write past 0xFFFF. Out of memory!",line)
+            sys.exit(2)
+
         addressStr = '0x{0:0{1}X}'.format(self.address,4)
 
         if(data != "expr"):
@@ -161,6 +165,9 @@ def org(arg, symbols, code, line):
         if(num < 0):
             error("Expression must be positive!",line)
             return 0
+        elif(num > 65535):
+            error("Cannot set origin past 0xFFFF!",line)
+            return 0
         else:
             code.address = num
             if(code.label):
@@ -225,6 +232,10 @@ def ds(arg, symbols, code, line):
         num = val[0]
         if(num < 0):
             error("Expression must be positive!",line)
+            return 0
+        elif(num + code.address > 65536):
+            error("Cannot define that much storage! Only " + str((65536 - code.address)) + 
+                  " bytes left. Overflow by " + str(num + code.address - 65536) + ".",line)
             return 0
         else:
             code.address += num
@@ -480,7 +491,9 @@ def parse_drct(tokens, symbols, code, line):
             return er
         data.append(expr)
         arg = data[2][1:]
-        directives[data[1][1]][0](arg,symbols,code,line)
+        status = directives[data[1][1]][0](arg,symbols,code,line)
+        if not status:
+            return er
         return data
     ##################################################
     # [drct_p]
@@ -520,7 +533,9 @@ def parse_drct(tokens, symbols, code, line):
             data.append(expr)
 
         d_args = [x[1:] for x in data[2:] if x[0] != "<comma>"]
-        directives[drct_p][0](d_args,symbols,code,line)
+        status = directives[drct_p][0](d_args,symbols,code,line)
+        if not status:
+            return er
         return data
     ##################################################
     # [drct_w]
@@ -543,7 +558,9 @@ def parse_drct(tokens, symbols, code, line):
         ##############################################
         arg1 = data[1]
         arg2 = data[3][1:]
-        directives[data[2][1]][0]([arg1,arg2],symbols,code,line)
+        status = directives[data[2][1]][0]([arg1,arg2],symbols,code,line)
+        if not status:
+            return er
         return data
     elif(tokens[0][0] == "<drct_w>"):
         error("Directive missing initial argument!",line)
