@@ -72,7 +72,7 @@ Label definitions may be any string ending with a colon, where the string does n
 ```
 ### Directives
 #### ORG <16-bit-address>
-Sets the origin to the given address.
+Sets the origin to the given address. Only forward movement of the origin is permitted.
 ```asm
 ; Example
 ;*******************************************************************************
@@ -99,6 +99,16 @@ Address             Label               Instruction         Hex Code
 0x0046                                  OUT 42              0xD3                
 0x0047                                                      0x42  
 ```
+```asm
+; Example
+;*******************************************************************************
+      org 0x44
+      mvi a, c7
+      out 44
+      org 0x00
+      JMP 0x0044
+```
+
 #### DB <8-bit-data>, ...
 Writes one or more data bytes sequentially into memory.
 ```asm
