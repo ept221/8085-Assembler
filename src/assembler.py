@@ -45,9 +45,7 @@ class Code:
         self.label = ""
 
     def update(self, data, index):
-
         self.data[index][5] = '0x{0:0{1}X}'.format(data,2)
-
 
 ##############################################################################################################
 # File reading functions
@@ -171,9 +169,7 @@ def org(arg, symbols, code, line):
         return
 
 def db(args, symbols, code, line):
-    print(args)
     for expr in args:
-        print(expr)
         val = evaluate(expr, symbols, code)
         if(len(val) == 1):
             num = val[0]
@@ -263,7 +259,7 @@ def secondPass(symbols, code):
                     if(numb > 255):
                         error("Expression must evaluate to 8-bit number!",line)
                     else:
-                        code.update(numb,line)
+                        code.update(numb,i)
                 elif(kind == "address"):
                     if(numb > 65535):
                         error("Expression must evaluate to 16-bit number!",line)
@@ -342,7 +338,8 @@ def evaluate(expr, symbols, code):
             result += sign*int(expr[-1][1], base=16)
             expr = expr[:-pop]
         elif(expr[-1][0] == "<lc>"):
-            result += sign*code.address
+            print("address = " + str(code.address))
+            result += sign*(code.address-1)
             expr = expr[:-pop] 
         else:
             if(expr[-1][1] in symbols.eightBitDefs):
