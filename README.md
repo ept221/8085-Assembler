@@ -170,6 +170,7 @@ Address             Instruction         Hex Code
 0x0001                                  0x0C     
 
 
+;###########################################################
 ; Example with expression resolution in two passes.
 ;***********************************************************
       MVI A, foo + 04
@@ -183,6 +184,7 @@ Address             Instruction         Hex Code
 0x0001                                  0x34
 
 
+;###########################################################
 ; Example with expression resolution in two passes, and $
 ;***********************************************************
       MVI A,  55
