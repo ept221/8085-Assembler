@@ -180,5 +180,29 @@ Address             Instruction         Hex Code
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
 0x0000              MVI A, FOO + 04     0x3E                
-0x0001                                  0x34   
+0x0001                                  0x34
+
+
+; Example with expression resolution in two passes, and $
+;***********************************************************
+      MVI A,  55
+      JMP $ + foo
+      foo equ 05
+      DB  $,  $ + 01, $ + foo
+      DS  02
+      HLT
+;***********************************************************
+; Assembles to the following:
+
+Address             Instruction         Hex Code            
+------------------------------------------------------------
+0x0000              MVI A, 55           0x3E                
+0x0001                                  0x55                
+0x0002              JMP $ + FOO         0xC3                
+0x0003                                  0x07                
+0x0004                                  0x00                
+0x0005              DB                  0x05                
+0x0006              DB                  0x07                
+0x0007              DB                  0x0C                
+0x000A              HLT                 0x76    
 ```
