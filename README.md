@@ -2,6 +2,14 @@
 
 A simple Python based 8085 assembler.
 
+## Quickstart
+To clone this repository and assemble the demo file, run:
+```bash
+git clone https://github.com/ept221/8085-Assembler.git
+cd 8085-Assembler/src/
+python3 assembler.py demo.asm -s
+```
+
 ## Usage
 ```
 usage: assembler.py [-h] [-L] [-A] [-B] [-I] [-H] [-C] [-s] [-o OUT] source
