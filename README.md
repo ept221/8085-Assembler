@@ -1,6 +1,6 @@
 # 8085-Assembler
 
-A simple 8085 assembler.
+A simple Python based 8085 assembler.
 
 ## Usage
 ```
