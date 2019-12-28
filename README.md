@@ -155,4 +155,4 @@ Address             Label               Instruction         Hex Code
 ```
 
 ## Expressions
-Anytime an instruction or directive requires a numerical argument, an expression can be used.
+Anytime an instruction or directive requires a numerical argument, an expression can be used. Supported operations inside expressions include addition and and subtraction, and the location counter $ is also made available.
