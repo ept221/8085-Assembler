@@ -102,10 +102,10 @@ Address             Label               Instruction         Hex Code
 ```asm
 ; Example
 ;*******************************************************************************
-      org 0x44
-      mvi a, c7
-      out 44
-      org 0x00
+      ORG 0x44
+      MVI A, C7
+      OUT 44
+      ORG 0x00      ; Illegal. Cannot move origin backwards
       JMP 0x0044
 ```
 
