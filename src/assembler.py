@@ -399,7 +399,7 @@ def evaluate(expr, symbols, address):
 #          | <drct_p> <expr> { ","  <expr> }
 #          | <symbol> <drct_w> <expr>
 #
-# <numb> := <08nm> | <16nm> | <symbol> | <lc>
+# <numb> ::= <08nm> | <16nm> | <symbol> | <lc>
 ######################################################################################
 def parse(lines, symbols, code):
 
