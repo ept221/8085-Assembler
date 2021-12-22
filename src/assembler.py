@@ -58,19 +58,19 @@ def read(name):
     # This function reads in lines from the asm file
     # It processes them and puts them into the form:
     # [[Line_number, Program_Counter] [body] [comment]]
-    # Line_number corrisponds to the line on the 
+    # Line_number corrisponds to the line on the
     # source code. the Program_Counter is incremented
     # every time there is a non-empty line. Note that
     # two consecutive PC locations do NOT nessisarily
     # corrispond to two consecutive address locations
 
     # [[Line_number, Program_Counter] [body] 'comment']
-    
+
     file = open(name, 'r')
     lines = []
     lineNumber = 0
     pc = 0
-    
+
     for lineNumber, line in enumerate(file, start = 1):
         line = line.strip()
         line = line.upper()
@@ -96,7 +96,7 @@ def read(name):
             block.append(comment)
             lines.append(block)
             pc += 1
-            
+
     file.close()
     return lines
 
@@ -162,6 +162,7 @@ def org(arg, symbols, code, line):
     val = evaluate(arg, symbols, code.address)
     if(len(val) == 1):
         num = val[0]
+        filler = 118    #Used to fill space between 'org' with known data, in this case use the HLT instruction.
         if(num < 0):
             error("Expression must be positive!",line)
             return 0
@@ -172,7 +173,11 @@ def org(arg, symbols, code, line):
             error("Cannot set origin past 0xFFFF!",line)
             return 0
         else:
-            code.address = num
+            if args.hex:    #if using just hex output then fill empty space between 'orgs' with known data.
+                while code.address < num:
+                    code.write(filler,line,instrct="")
+            else:
+                code.address = num
             if(code.label):
                 symbols.labelDefs[code.label[:-1]] = '{0:0{1}X}'.format(num,4)
             return 1
@@ -237,7 +242,7 @@ def ds(arg, symbols, code, line):
             error("Expression must be positive!",line)
             return 0
         elif(num + code.address > 65536):
-            error("Cannot define that much storage! Only " + str((65536 - code.address)) + 
+            error("Cannot define that much storage! Only " + str((65536 - code.address)) +
                   " bytes left. Overflow by " + str(num + code.address - 65536) + ".",line)
             return 0
         else:
@@ -256,7 +261,7 @@ directives = {
     "EQU": [equ, 2, 2, "EQU"],
     "DS":  [ds, 1, 1, "DS"],
 }
-     
+
 def secondPass(symbols, code):
     # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
     i = 0
@@ -291,7 +296,7 @@ def secondPass(symbols, code):
                 error("Expression relies on unresolved symbol!",line)
                 return 0
         else:
-            address = int(codeLine[2], base=16) 
+            address = int(codeLine[2], base=16)
         i += 1
 
 def lexer(lines):
@@ -363,7 +368,7 @@ def evaluate(expr, symbols, address):
             expr = expr[:-pop]
         elif(expr[-1][0] == "<lc>"):
             result += sign*(address)
-            expr = expr[:-pop] 
+            expr = expr[:-pop]
         else:
             if(expr[-1][1] in symbols.eightBitDefs):
                 result += sign*int(symbols.eightBitDefs[expr[-1][1]], base=16)
@@ -805,7 +810,7 @@ def parse_line(tokens, symbols, code, line):
     ###############################
     # check to see if we have any
     # tokens left
-    if(len(tokens)):   
+    if(len(tokens)):
         error("Bad Final Identifier!",line)
         return er
     ###############################
