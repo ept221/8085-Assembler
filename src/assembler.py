@@ -75,41 +75,14 @@ def read(name):
     
     for lineNumber, line in enumerate(file, start = 1):
         line = line.strip()
-        #line = line.upper()
         if(line):
-            #print(line)
             block = []
-            # rest = []
-            # comment = ''
-            # commentIndex = line.find(";")
-            # if(commentIndex != -1):
-            #     comment = line[commentIndex:]
-            #     rest = line[:commentIndex].strip()
-            # else:
-            #     rest = line
-
-
-
             block.append([lineNumber, pc])
-            #print(line)
-            #words = re.split(r'(\+|-|;|,|"|\s|(?:\[(?:l|L|h|H)\]))', line)
             words = re.split(r'(\+|-|;|,|"|\s)', line)
             words = list(filter(None, words))
             block.append(words)
             block.append("")    # empty comment
             lines.append(block)
-            #print(block)
-            pc += 1
-
-            # if(rest):
-            #     split_rest = re.split(r'([-+,\s]\s*)', rest)
-            #     split_rest = [word for word in split_rest if not re.match(r'^\s*$',word)]
-            #     split_rest = list(filter(None, split_rest))
-            #     block.append(split_rest)
-            # else:
-            #     block.append([])
-            # block.append(comment)
-            # lines.append(block)
             pc += 1
             
     file.close()
@@ -209,254 +182,39 @@ def lexer(lines):
         if(block[1]):
             tokens.append(tl)
             codeLines.append(block)        
-                    
-
-
-
-    # tokens = []
-    # code_lines = [x for x in lines if len(x[1])]
-    # for line in code_lines:
-    #     tl = []
-    #     for word in line[1]:
-    #         word = word.strip()
-    #         if word in table.mnm_0:
-    #             tl.append(["<mnm_0>", word])
-    #         elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
-    #             tl.append(["<08nm>", word])
-    #         elif word in table.mnm_0_e:
-    #             tl.append(["<mnm_0_e>", word])
-    #         elif word in table.mnm_1:
-    #             tl.append(["<mnm_1>", word])
-    #         elif word in table.mnm_1_e:
-    #             tl.append(["<mnm_1_e>", word])
-    #         elif word in table.mnm_2:
-    #             tl.append(["<mnm_2>", word])
-    #         elif word in table.reg:
-    #             tl.append(["<reg>", word])
-    #         elif word == ",":
-    #             tl.append(["<comma>", word])
-    #         elif word == "+":
-    #             tl.append(["<plus>", word])
-    #         elif word == "-":
-    #             tl.append(["<minus>", word])
-    #         elif word in table.drct_1:
-    #             tl.append(["<drct_1>", word])
-    #         elif word in table.drct_p:
-    #             tl.append(["<drct_p>", word])
-    #         elif word in table.drct_w:
-    #             tl.append(["<drct_w>", word])
-    #         elif re.match(r'^.+:$',word):
-    #             tl.append(["<lbl_def>", word])
-    #         elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
-    #             tl.append(["<16nm>", word])
-    #         elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
-    #             tl.append(["<symbol>", word])
-    #         elif word == "$":
-    #             tl.append(["<lc>", word])
-    #         else:
-    #             tl.append(["<idk_man>", word])
-    #             error("Unknown token: " + word, line)
-    #             return [0 , 0]
-
-        # tokens.append(tl)
-    for t in tokens:
-        print(t)
 
     return [codeLines, tokens]
 ##############################################################################################################
-# Utility functions
-
 def error(message, line):
     print("Error at line " + str(line[0][0]) + ": " + message)
-
-def output(code, name, args):
-    # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
-    f = open(name,'w') if name else sys.stdout
-
-    width = 0;
-    if args.lineNum:
-        print('{:<20}'.format("Line number"),file=f,end='')
-        width += 20
-    if args.address:
-        print('{:<20}'.format("Address"),file=f,end='')
-        width += 20
-    if args.label:
-        print('{:<20}'.format("Label"),file=f,end='')
-        width += 20
-    if args.instruction:
-        print('{:<20}'.format("Instruction"),file=f,end='')
-        width += 20
-    if args.hex:
-        print('{:<20}'.format("Hex Code"),file=f,end='')
-        width += 20
-    if args.comment:
-        print('{:<20}'.format("Comment"),file=f,end='')
-        width += 20
-
-    if width:
-        print(file=f)
-
-    for i in range(0,width):
-        print("-",file=f,end='')
-
-    if width:
-        print(file=f)
-        for l in code.data:
-            if args.lineNum:
-                print('{:<20}'.format(l[1]),file=f,end='')
-            if args.address:
-                print('{:<20}'.format(l[2]),file=f,end='')
-            if args.label:
-                print('{:<20}'.format(l[3]),file=f,end='')
-            if args.instruction:
-                print('{:<20}'.format(l[4]),file=f,end='')
-            if args.hex:
-                print('{:<20}'.format(l[5]),file=f,end='')
-            if args.comment:
-                print('{:<20}'.format(l[6]),file=f,end='')
-            print(file=f)
-
-    if f is not sys.stdout:
-        f.close()
-
 ##############################################################################################################
-# Directive functions
-def org(arg, symbols, code, line):
-    val = evaluate(arg, symbols, code.address)
-    if(len(val) == 1):
-        num = val[0]
-        if(num < 0):
-            error("Expression must be positive!",line)
-            return 0
-        elif(num < code.address):
-            error("Cannot move origin backwards!",line)
-            return 0
-        elif(num > 65535):
-            error("Cannot set origin past 0xFFFF!",line)
-            return 0
-        else:
-            code.address = num
-            if(code.label):
-                symbols.labelDefs[code.label[:-1]] = '{0:0{1}X}'.format(num,4)
-            return 1
-    else:
-        error("Expression depends on unresolved symbol!",line)
+def parse_expr(tokens, symbols, code, line):
+    data = ["<expr>"]
+    er = ["<error>"]
+    if not tokens:
         return 0
-
-def db(args, symbols, code, line):
-    for expr in args:
-        val = evaluate(expr, symbols, code.address)
-        if(len(val) == 1):
-            num = val[0]
-            if(num < 0):
-                error("Expression must be positive!",line)
-                return 0
-            elif(num > 255):
-                error("Expression too large! Must evaluate to an 8-bit number!", line)
-                return 0
-            else:
-                code.write(num,line,instrct="DB")
-        else:
-            error("Expression depends on unresolved symbol!",line)
-            return 0
-    return 1
-
-def equ(args, symbols, code, line):
-    name = args[0][1]
-    if(name in table.reserved):
-        error("Cannot use reserved keyword in equ directive!",line)
-        return 0
-    elif(name in (symbols.eightBitDefs, symbols.sixteenBitDefs)):
-        error("Symbol already defined!",line)
-        return 0
-    elif(name in symbols.labelDefs):
-        error("Symbol conflicts with previous label definition!",line)
-        return 0
-
-    val = evaluate(args[1], symbols, code.address)
-    if(len(val) == 1):
-        num = val[0]
-        if num > 65535:
-            error("Expression evaluates to value greater than 0xFFFF!",line)
-            return 0
-        elif num > 255:
-            symbols.sixteenBitDefs[name] = '{0:0{1}X}'.format(num,4)
-            return 1
-        elif num >= 0:
-            symbols.eightBitDefs[name] = '{0:0{1}X}'.format(num,2)
-            return 1
-        else:
-            error("Expression must be positive!",line)
-            return 0
-    else:
-        error("Expression depends on unresolved symbol!",line)
-        return 0
-
-def ds(arg, symbols, code, line):
-    val = evaluate(arg, symbols, code.address)
-    if(len(val) == 1):
-        num = val[0]
-        if(num < 0):
-            error("Expression must be positive!",line)
-            return 0
-        elif(num + code.address > 65536):
-            error("Cannot define that much storage! Only " + str((65536 - code.address)) + 
-                  " bytes left. Overflow by " + str(num + code.address - 65536) + ".",line)
-            return 0
-        else:
-            code.address += num
-            return 1
-    else:
-        error("Expression depends on unresolved symbol!",line)
-        return 0
-
-directives = {
-    #Format:
-    # [function, min_args, max_args, name]
-    # -1 means no bound
-    "ORG": [org, 1, 1, "ORG"],
-    "DB":  [db, 1, -1, "DB"],
-    "EQU": [equ, 2, 2, "EQU"],
-    "DS":  [ds, 1, 1, "DS"],
-}
-     
-def secondPass(symbols, code):
-    # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
-    i = 0
-    address = 0
-    while i < len(code.data):
-        codeLine = code.data[i]
-        line = codeLine[0]
-        data = codeLine[5]
-        if(data == "expr"):
-            expr, kind  = symbols.expr.pop(0)
-            val = evaluate(expr, symbols, address)
-            if(len(val) == 1):
-                numb = val[0]
-                if(numb < 0):
-                    error("Expression must be positive!",line)
+    ##################################################
+    while(tokens):
+        if(tokens[0][0] in {"<plus>", "<minus>"}):
+            data.append(tokens.pop(0))
+        elif(len(data) > 1):
+            return data
+        if(len(data) > 1 and (not tokens)):
+            error("Expression missing number/symbol!",line)
+            return er
+        if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>", "<lc>"}):
+            if(tokens[0][0] not in {"<plus>", "<minus>"}):
+                if(len(data) > 1):
+                    error("Expression has bad identifier!",line)
+                    return er
+                else:
                     return 0
-                elif(kind == "data"):
-                    if(numb > 255):
-                        error("Expression must evaluate to 8-bit number!",line)
-                        return 0
-                    else:
-                        code.update(numb,i)
-                elif(kind == "address"):
-                    if(numb > 65535):
-                        error("Expression must evaluate to 16-bit number!",line)
-                        return 0
-                    else:
-                        code.update((numb & 0xff),i)
-                        code.update((numb >> 8),i+1)
-                        i += 1
             else:
-                error("Expression relies on unresolved symbol!",line)
-                return 0
-        else:
-            address = int(codeLine[2], base=16) 
-        i += 1
-######################################################################################
+                error("Expression has extra operator!",line)
+                return er
+        data.append(tokens.pop(0))
+    return data
+##############################################################################################################
 def evaluate(expr, symbols, address):
     sign, pop, result = 1, 2, 0
     while(expr):
@@ -492,73 +250,7 @@ def evaluate(expr, symbols, address):
                 return expr
         ###################################
     return [result]
-
-######################################################################################
-# Grammar:
-#
-# <line> ::= <lbl_def> [<drct>] [<code>]
-#          | <drct> [<code>]
-#          | <code>
-#
-# <code> ::= <mnm_0>
-#          | <mnm_0_e> <expr>
-#          | <mnm_1> <reg>
-#          | <mnm_1_e> <reg> "," <expr>
-#          | <mnm_2> <reg> "," <reg>
-#
-# <expr> ::= [ (<plus> | <minus>) ] <numb> { (<plus> | <minus>) <numb> }
-#
-# <drct> ::= <drct_1> <expr>
-#          | <drct_p> <expr> { ","  <expr> }
-#          | <symbol> <drct_w> <expr>
-#
-# <numb> ::= <08nm> | <16nm> | <symbol> | <lc>
-######################################################################################
-def parse(lines, symbols, code):
-
-    code_lines, tokenLines = lexer(lines)
-    if(code_lines == 0):
-        sys.exit(1)
-
-    tree = []
-
-    for tokens, line in zip(tokenLines, code_lines):
-        parsed_line = parse_line(tokens, symbols, code, line)
-        if(parsed_line[0] == "<error>"):
-            sys.exit(1)
-        tree.append(parsed_line)
-
-    status = secondPass(symbols, code)
-    if(status == 0):
-        sys.exit(1)
-######################################################################################
-def parse_expr(tokens, symbols, code, line):
-    data = ["<expr>"]
-    er = ["<error>"]
-    if not tokens:
-        return 0
-    ##################################################
-    while(tokens):
-        if(tokens[0][0] in {"<plus>", "<minus>"}):
-            data.append(tokens.pop(0))
-        elif(len(data) > 1):
-            return data
-        if(len(data) > 1 and (not tokens)):
-            error("Expression missing number/symbol!",line)
-            return er
-        if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>", "<lc>"}):
-            if(tokens[0][0] not in {"<plus>", "<minus>"}):
-                if(len(data) > 1):
-                    error("Expression has bad identifier!",line)
-                    return er
-                else:
-                    return 0
-            else:
-                error("Expression has extra operator!",line)
-                return er
-        data.append(tokens.pop(0))
-    return data
-######################################################################################
+##############################################################################################################
 def parse_lbl_def(tokens, symbols, code, line):
     er = ["<error>"]
     if not tokens:
@@ -584,8 +276,106 @@ def parse_lbl_def(tokens, symbols, code, line):
         return tokens.pop(0)
     else:
         return 0
+##############################################################################################################
+def org(arg, symbols, code, line):
+    val = evaluate(arg, symbols, code.address)
+    if(len(val) == 1):
+        num = val[0]
+        if(num < 0):
+            error("Expression must be positive!",line)
+            return 0
+        elif(num < code.address):
+            error("Cannot move origin backwards!",line)
+            return 0
+        elif(num > 65535):
+            error("Cannot set origin past 0xFFFF!",line)
+            return 0
+        else:
+            code.address = num
+            if(code.label):
+                symbols.labelDefs[code.label[:-1]] = '{0:0{1}X}'.format(num,4)
+            return 1
+    else:
+        error("Expression depends on unresolved symbol!",line)
+        return 0
+##############################################################################################################
+def db(args, symbols, code, line):
+    for expr in args:
+        val = evaluate(expr, symbols, code.address)
+        if(len(val) == 1):
+            num = val[0]
+            if(num < 0):
+                error("Expression must be positive!",line)
+                return 0
+            elif(num > 255):
+                error("Expression too large! Must evaluate to an 8-bit number!", line)
+                return 0
+            else:
+                code.write(num,line,instrct="DB")
+        else:
+            error("Expression depends on unresolved symbol!",line)
+            return 0
+    return 1
+##############################################################################################################
+def equ(args, symbols, code, line):
+    name = args[0][1]
+    if(name in table.reserved):
+        error("Cannot use reserved keyword in equ directive!",line)
+        return 0
+    elif(name in (symbols.eightBitDefs, symbols.sixteenBitDefs)):
+        error("Symbol already defined!",line)
+        return 0
+    elif(name in symbols.labelDefs):
+        error("Symbol conflicts with previous label definition!",line)
+        return 0
 
-######################################################################################
+    val = evaluate(args[1], symbols, code.address)
+    if(len(val) == 1):
+        num = val[0]
+        if num > 65535:
+            error("Expression evaluates to value greater than 0xFFFF!",line)
+            return 0
+        elif num > 255:
+            symbols.sixteenBitDefs[name] = '{0:0{1}X}'.format(num,4)
+            return 1
+        elif num >= 0:
+            symbols.eightBitDefs[name] = '{0:0{1}X}'.format(num,2)
+            return 1
+        else:
+            error("Expression must be positive!",line)
+            return 0
+    else:
+        error("Expression depends on unresolved symbol!",line)
+        return 0
+##############################################################################################################
+def ds(arg, symbols, code, line):
+    val = evaluate(arg, symbols, code.address)
+    if(len(val) == 1):
+        num = val[0]
+        if(num < 0):
+            error("Expression must be positive!",line)
+            return 0
+        elif(num + code.address > 65536):
+            error("Cannot define that much storage! Only " + str((65536 - code.address)) + 
+                  " bytes left. Overflow by " + str(num + code.address - 65536) + ".",line)
+            return 0
+        else:
+            code.address += num
+            return 1
+    else:
+        error("Expression depends on unresolved symbol!",line)
+        return 0
+##############################################################################################################
+directives = {
+    #Format:
+    # [function, min_args, max_args, name]
+    # -1 means no bound
+    "ORG": [org, 1, 1, "ORG"],
+    "DB":  [db, 1, -1, "DB"],
+    "EQU": [equ, 2, 2, "EQU"],
+    "DS":  [ds, 1, 1, "DS"],
+}
+##############################################################################################################
 def parse_drct(tokens, symbols, code, line):
     args = [tokens, symbols, code, line]
     data = ["<drct>"]
@@ -683,8 +473,7 @@ def parse_drct(tokens, symbols, code, line):
         return er
 
     return 0
-
-######################################################
+##############################################################################################################
 def parse_code(tokens, symbols, code, line):
     args = [tokens, symbols, code, line]
     data = ["<code>"]
@@ -880,7 +669,27 @@ def parse_code(tokens, symbols, code, line):
         return data
 
     return 0
-######################################################################################
+##############################################################################################################
+# Grammar:
+#
+# <line> ::= <lbl_def> [<drct>] [<code>]
+#          | <drct> [<code>]
+#          | <code>
+#
+# <code> ::= <mnm_0>
+#          | <mnm_0_e> <expr>
+#          | <mnm_1> <reg>
+#          | <mnm_1_e> <reg> "," <expr>
+#          | <mnm_2> <reg> "," <reg>
+#
+# <expr> ::= [ (<plus> | <minus>) ] <numb> { (<plus> | <minus>) <numb> }
+#
+# <drct> ::= <drct_1> <expr>
+#          | <drct_p> <expr> { ","  <expr> }
+#          | <symbol> <drct_w> <expr>
+#
+# <numb> ::= <08nm> | <16nm> | <symbol> | <lc>
+##############################################################################################################
 def parse_line(tokens, symbols, code, line):
     data = ["<line>"]
     er = ["<error>"]
@@ -924,8 +733,112 @@ def parse_line(tokens, symbols, code, line):
     ###############################
     # everything's good
     return data
+##############################################################################################################
+def secondPass(symbols, code):
+    # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
+    i = 0
+    address = 0
+    while i < len(code.data):
+        codeLine = code.data[i]
+        line = codeLine[0]
+        data = codeLine[5]
+        if(data == "expr"):
+            expr, kind  = symbols.expr.pop(0)
+            val = evaluate(expr, symbols, address)
+            if(len(val) == 1):
+                numb = val[0]
+                if(numb < 0):
+                    error("Expression must be positive!",line)
+                    return 0
+                elif(kind == "data"):
+                    if(numb > 255):
+                        error("Expression must evaluate to 8-bit number!",line)
+                        return 0
+                    else:
+                        code.update(numb,i)
+                elif(kind == "address"):
+                    if(numb > 65535):
+                        error("Expression must evaluate to 16-bit number!",line)
+                        return 0
+                    else:
+                        code.update((numb & 0xff),i)
+                        code.update((numb >> 8),i+1)
+                        i += 1
+            else:
+                error("Expression relies on unresolved symbol!",line)
+                return 0
+        else:
+            address = int(codeLine[2], base=16) 
+        i += 1
+##############################################################################################################
+def parse(lines, symbols, code):
 
-######################################################################################
+    code_lines, tokenLines = lexer(lines)
+    if(code_lines == 0):
+        sys.exit(1)
+
+    tree = []
+
+    for tokens, line in zip(tokenLines, code_lines):
+        parsed_line = parse_line(tokens, symbols, code, line)
+        if(parsed_line[0] == "<error>"):
+            sys.exit(1)
+        tree.append(parsed_line)
+
+    status = secondPass(symbols, code)
+    if(status == 0):
+        sys.exit(1)
+##############################################################################################################
+def output(code, name, args):
+    # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
+    f = open(name,'w') if name else sys.stdout
+
+    width = 0;
+    if args.lineNum:
+        print('{:<20}'.format("Line number"),file=f,end='')
+        width += 20
+    if args.address:
+        print('{:<20}'.format("Address"),file=f,end='')
+        width += 20
+    if args.label:
+        print('{:<20}'.format("Label"),file=f,end='')
+        width += 20
+    if args.instruction:
+        print('{:<20}'.format("Instruction"),file=f,end='')
+        width += 20
+    if args.hex:
+        print('{:<20}'.format("Hex Code"),file=f,end='')
+        width += 20
+    if args.comment:
+        print('{:<20}'.format("Comment"),file=f,end='')
+        width += 20
+
+    if width:
+        print(file=f)
+
+    for i in range(0,width):
+        print("-",file=f,end='')
+
+    if width:
+        print(file=f)
+        for l in code.data:
+            if args.lineNum:
+                print('{:<20}'.format(l[1]),file=f,end='')
+            if args.address:
+                print('{:<20}'.format(l[2]),file=f,end='')
+            if args.label:
+                print('{:<20}'.format(l[3]),file=f,end='')
+            if args.instruction:
+                print('{:<20}'.format(l[4]),file=f,end='')
+            if args.hex:
+                print('{:<20}'.format(l[5]),file=f,end='')
+            if args.comment:
+                print('{:<20}'.format(l[6]),file=f,end='')
+            print(file=f)
+
+    if f is not sys.stdout:
+        f.close()
+##############################################################################################################
 # Main program
 
 code = Code()
