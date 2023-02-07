@@ -143,4 +143,4 @@ reg = {
 
 reserved_mnm_0_e = {key for key in mnm_0_e}
 reserved_mnm_1_e = {key for key in mnm_1_e}
-reserved =  bin_op | uni_op | mnm_0 | reserved_mnm_0_e | mnm_1 | reserved_mnm_1_e | mnm_2 | drct_1 | drct_p | drct_w | reg 
+reserved =  bin_op | uni_op | mnm_0 | reserved_mnm_0_e | mnm_1 | reserved_mnm_1_e | mnm_2 | drct_1 | drct_p | drct_w | drct_s | reg 
