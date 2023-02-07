@@ -116,6 +116,10 @@ drct_w = {
 	'EQU'
 }
 
+drct_s = {
+    'STRING'
+}
+
 reg = {
     'A',
     'B',

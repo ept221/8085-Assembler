@@ -166,6 +166,8 @@ def lexer(lines):
                         tl.append(["<drct_p>", word])
                     elif word in table.drct_w:
                         tl.append(["<drct_w>", word])
+                    elif word in table.drct_s:
+                        tl.append(["<drct_s>", word])
                     elif re.match(r'^.+:$',word):
                         tl.append(["<lbl_def>", word])
                     elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
@@ -366,6 +368,19 @@ def ds(arg, symbols, code, line):
         error("Expression depends on unresolved symbol!",line)
         return 0
 ##############################################################################################################
+def store_string(arg, symbols, code, line):
+    for char in arg:
+        if(int(ord(char)) > 128):
+            error("Unsupported character in string: " + str(char),line)
+            return 0
+
+    new_str = bytes(arg,"utf-8").decode("unicode_escape")
+
+    for char in new_str:
+        code.write(ord(char),line,instrct="STRING")
+    
+    return 1
+##############################################################################################################
 directives = {
     #Format:
     # [function, min_args, max_args, name]
@@ -374,6 +389,7 @@ directives = {
     "DB":  [db, 1, -1, "DB"],
     "EQU": [equ, 2, 2, "EQU"],
     "DS":  [ds, 1, 1, "DS"],
+    "STRING": [store_string, 3, -1, "STRING"],
 }
 ##############################################################################################################
 def parse_drct(tokens, symbols, code, line):
@@ -471,7 +487,33 @@ def parse_drct(tokens, symbols, code, line):
     elif(tokens[0][0] == "<drct_w>"):
         error("Directive missing initial argument!",line)
         return er
+    ##################################################
+    # [drct_s]
+    if(tokens[0][0] == "<drct_s>"):
+        drct_s = tokens[0][1]
+        data.append(tokens.pop(0))
+        string = ""
+        if(not tokens):
+            error("Directive missing argument!",line)
+            return er
+        if(tokens[0][0] != "<quote>"):
+            error("Directive missing start quote!",line)
+            return er
+        data.append(tokens.pop(0))
 
+        while(len(tokens) and tokens[0][0] != "<quote>"):
+            string += tokens[0][1]
+            data.append(tokens.pop(0))
+
+        if(not tokens or tokens[0][0] != "<quote>"):
+            error("Directive missing end quote!",line)
+            return er
+        data.append(tokens.pop(0))
+
+        status = directives[drct_s][0](string,symbols,code,line)
+        if not status:
+            return er
+        return data
     return 0
 ##############################################################################################################
 def parse_code(tokens, symbols, code, line):
@@ -687,6 +729,7 @@ def parse_code(tokens, symbols, code, line):
 # <drct> ::= <drct_1> <expr>
 #          | <drct_p> <expr> { ","  <expr> }
 #          | <symbol> <drct_w> <expr>
+#          | <drct_s> <quote> { <string_seg> } <quote>
 #
 # <numb> ::= <08nm> | <16nm> | <symbol> | <lc>
 ##############################################################################################################
