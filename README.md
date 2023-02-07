@@ -171,6 +171,40 @@ Address             Label               Instruction         Hex Code
 0x000B              END:                OUT 42              0xD3                
 0x000C                                                      0x42              
 ```
+#### STRING
+Writes an ASCII string into memory. Double quotes and backslashes must be escaped with a backslash. The string is not null terminated by default, but can be terminated by adding \0 to the string.
+```asm
+; Example
+;*******************************************************************************
+my_str: STRING "The robot says \"Hi!\"\0"
+;*******************************************************************************
+; Assembles to the following:
+
+Address             Instruction         Hex Code            
+------------------------------------------------------------
+0x0000              STRING              0x54                
+0x0001              STRING              0x68                
+0x0002              STRING              0x65                
+0x0003              STRING              0x20                
+0x0004              STRING              0x72                
+0x0005              STRING              0x6F                
+0x0006              STRING              0x62                
+0x0007              STRING              0x6F                
+0x0008              STRING              0x74                
+0x0009              STRING              0x20                
+0x000A              STRING              0x73                
+0x000B              STRING              0x61                
+0x000C              STRING              0x79                
+0x000D              STRING              0x73                
+0x000E              STRING              0x20                
+0x000F              STRING              0x22                
+0x0010              STRING              0x48                
+0x0011              STRING              0x69                
+0x0012              STRING              0x21                
+0x0013              STRING              0x22                
+0x0014              STRING              0x00 
+```
+
 
 ## Expressions
 Anytime an instruction or directive requires a numerical argument, an expression can be used. Supported operations inside expressions include addition and subtraction. The location counter $ is also made available. Expressions may contain symbols, but must resolve within two passes of the assembler, and if used for directive arguments, must resolve in a single pass. All expressions must evaluate to a positive number.
