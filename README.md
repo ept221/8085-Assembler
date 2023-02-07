@@ -171,7 +171,7 @@ Address             Label               Instruction         Hex Code
 0x000B              END:                OUT 42              0xD3                
 0x000C                                                      0x42              
 ```
-#### STRING <string>
+#### STRING \<string>
 Writes an ASCII string into memory. Double quotes and backslashes must be escaped with a backslash. The string is not null terminated by default, but can be terminated by adding \0 to the string.
 ```asm
 ; Example
