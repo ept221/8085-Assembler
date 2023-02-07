@@ -1,5 +1,3 @@
-# Notes:
-# -> Add decimal and binary base functionality
 ##############################################################################################################
 import re
 import sys
@@ -16,6 +14,7 @@ class Symbol:
         self.labelDefs = {}
         self.eightBitDefs = {}
         self.sixteenBitDefs = {}
+        self.defs = {}
         self.expr = []
 
 class Code:
@@ -53,7 +52,6 @@ class Code:
 
 ##############################################################################################################
 # File reading functions
-
 def read(name):
     # This function reads in lines from the asm file
     # It processes them and puts them into the form:
@@ -66,40 +64,205 @@ def read(name):
 
     # [[Line_number, Program_Counter] [body] 'comment']
     
-    file = open(name, 'r')
+    try:
+        file = open(name, 'r')
+    except:
+        print("File not found!")
+        sys.exit(2)
     lines = []
     lineNumber = 0
     pc = 0
     
     for lineNumber, line in enumerate(file, start = 1):
         line = line.strip()
-        line = line.upper()
+        #line = line.upper()
         if(line):
+            #print(line)
             block = []
-            rest = []
-            comment = ''
-            commentIndex = line.find(";")
-            if(commentIndex != -1):
-                comment = line[commentIndex:]
-                rest = line[:commentIndex].strip()
-            else:
-                rest = line
+            # rest = []
+            # comment = ''
+            # commentIndex = line.find(";")
+            # if(commentIndex != -1):
+            #     comment = line[commentIndex:]
+            #     rest = line[:commentIndex].strip()
+            # else:
+            #     rest = line
+
+
 
             block.append([lineNumber, pc])
-            if(rest):
-                split_rest = re.split(r'([-+,\s]\s*)', rest)
-                split_rest = [word for word in split_rest if not re.match(r'^\s*$',word)]
-                split_rest = list(filter(None, split_rest))
-                block.append(split_rest)
-            else:
-                block.append([])
-            block.append(comment)
+            #print(line)
+            #words = re.split(r'(\+|-|;|,|"|\s|(?:\[(?:l|L|h|H)\]))', line)
+            words = re.split(r'(\+|-|;|,|"|\s)', line)
+            words = list(filter(None, words))
+            block.append(words)
+            block.append("")    # empty comment
             lines.append(block)
+            #print(block)
+            pc += 1
+
+            # if(rest):
+            #     split_rest = re.split(r'([-+,\s]\s*)', rest)
+            #     split_rest = [word for word in split_rest if not re.match(r'^\s*$',word)]
+            #     split_rest = list(filter(None, split_rest))
+            #     block.append(split_rest)
+            # else:
+            #     block.append([])
+            # block.append(comment)
+            # lines.append(block)
             pc += 1
             
     file.close()
     return lines
+##############################################################################################################
+def lexer(lines):
 
+    codeLines = []
+    tokens = []
+
+    for line in lines:
+
+        tl = []
+        block = [line[0],[],""]
+
+        commentCapture = False
+        stringCapture = False
+
+        for word in line[1]:
+            ################################################################
+            if(commentCapture):
+                block[-1] += word
+            ################################################################
+            elif(stringCapture):
+                block[1].append(word)
+                slash_count = 0
+                if(word == "\""):
+                    for x in reversed(tl[-1][1]):
+                        if x == "\\":
+                            slash_count += 1
+                        else:
+                            break
+                    if(slash_count % 2 == 0):
+                        tl.append(["<quote>", word])
+                        stringCapture = False
+                    else:
+                        tl.append(["<string_seg>", word])
+                else:
+                    tl.append(["<string_seg>", word])
+            ################################################################
+            else:
+                if(word == ";"):
+                    block[-1] += word
+                    commentCapture = True
+                elif(word == "\""):
+                    block[1].append(word)
+                    tl.append(["<quote>", word])
+                    stringCapture = True
+                else:
+                    block[1].append(word)
+                    word = word.strip()
+                    word = word.upper()
+                    if(word == "\""):
+                        tl.append(["<quote>", word])
+                        stringCapture = True
+                    elif(re.match(r'^\s*$',word)):
+                        pass
+                    elif word in table.mnm_0:
+                        tl.append(["<mnm_0>", word])
+                    elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
+                        tl.append(["<08nm>", word])
+                    elif word in table.mnm_0_e:
+                        tl.append(["<mnm_0_e>", word])
+                    elif word in table.mnm_1:
+                        tl.append(["<mnm_1>", word])
+                    elif word in table.mnm_1_e:
+                        tl.append(["<mnm_1_e>", word])
+                    elif word in table.mnm_2:
+                        tl.append(["<mnm_2>", word])
+                    elif word in table.reg:
+                        tl.append(["<reg>", word])
+                    elif word == ",":
+                        tl.append(["<comma>", word])
+                    elif word == "+":
+                        tl.append(["<plus>", word])
+                    elif word == "-":
+                        tl.append(["<minus>", word])
+                    elif word in table.drct_1:
+                        tl.append(["<drct_1>", word])
+                    elif word in table.drct_p:
+                        tl.append(["<drct_p>", word])
+                    elif word in table.drct_w:
+                        tl.append(["<drct_w>", word])
+                    elif re.match(r'^.+:$',word):
+                        tl.append(["<lbl_def>", word])
+                    elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
+                        tl.append(["<16nm>", word])
+                    elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
+                        tl.append(["<symbol>", word])
+                    elif word == "$":
+                        tl.append(["<lc>", word])
+                    else:
+                        tl.append(["<idk_man>", word])
+                        error("Unknown token: " + word, line)
+                        return [0 , 0]
+            ################################################################            
+        if(block[1]):
+            tokens.append(tl)
+            codeLines.append(block)        
+                    
+
+
+
+    # tokens = []
+    # code_lines = [x for x in lines if len(x[1])]
+    # for line in code_lines:
+    #     tl = []
+    #     for word in line[1]:
+    #         word = word.strip()
+    #         if word in table.mnm_0:
+    #             tl.append(["<mnm_0>", word])
+    #         elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
+    #             tl.append(["<08nm>", word])
+    #         elif word in table.mnm_0_e:
+    #             tl.append(["<mnm_0_e>", word])
+    #         elif word in table.mnm_1:
+    #             tl.append(["<mnm_1>", word])
+    #         elif word in table.mnm_1_e:
+    #             tl.append(["<mnm_1_e>", word])
+    #         elif word in table.mnm_2:
+    #             tl.append(["<mnm_2>", word])
+    #         elif word in table.reg:
+    #             tl.append(["<reg>", word])
+    #         elif word == ",":
+    #             tl.append(["<comma>", word])
+    #         elif word == "+":
+    #             tl.append(["<plus>", word])
+    #         elif word == "-":
+    #             tl.append(["<minus>", word])
+    #         elif word in table.drct_1:
+    #             tl.append(["<drct_1>", word])
+    #         elif word in table.drct_p:
+    #             tl.append(["<drct_p>", word])
+    #         elif word in table.drct_w:
+    #             tl.append(["<drct_w>", word])
+    #         elif re.match(r'^.+:$',word):
+    #             tl.append(["<lbl_def>", word])
+    #         elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
+    #             tl.append(["<16nm>", word])
+    #         elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
+    #             tl.append(["<symbol>", word])
+    #         elif word == "$":
+    #             tl.append(["<lc>", word])
+    #         else:
+    #             tl.append(["<idk_man>", word])
+    #             error("Unknown token: " + word, line)
+    #             return [0 , 0]
+
+        # tokens.append(tl)
+    for t in tokens:
+        print(t)
+
+    return [codeLines, tokens]
 ##############################################################################################################
 # Utility functions
 
@@ -293,56 +456,6 @@ def secondPass(symbols, code):
         else:
             address = int(codeLine[2], base=16) 
         i += 1
-
-def lexer(lines):
-    tokens = []
-    code_lines = [x for x in lines if len(x[1])]
-    for line in code_lines:
-        tl = []
-        for word in line[1]:
-            word = word.strip()
-            if word in table.mnm_0:
-                tl.append(["<mnm_0>", word])
-            elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
-                tl.append(["<08nm>", word])
-            elif word in table.mnm_0_e:
-                tl.append(["<mnm_0_e>", word])
-            elif word in table.mnm_1:
-                tl.append(["<mnm_1>", word])
-            elif word in table.mnm_1_e:
-                tl.append(["<mnm_1_e>", word])
-            elif word in table.mnm_2:
-                tl.append(["<mnm_2>", word])
-            elif word in table.reg:
-                tl.append(["<reg>", word])
-            elif word == ",":
-                tl.append(["<comma>", word])
-            elif word == "+":
-                tl.append(["<plus>", word])
-            elif word == "-":
-                tl.append(["<minus>", word])
-            elif word in table.drct_1:
-                tl.append(["<drct_1>", word])
-            elif word in table.drct_p:
-                tl.append(["<drct_p>", word])
-            elif word in table.drct_w:
-                tl.append(["<drct_w>", word])
-            elif re.match(r'^.+:$',word):
-                tl.append(["<lbl_def>", word])
-            elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
-                tl.append(["<16nm>", word])
-            elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
-                tl.append(["<symbol>", word])
-            elif word == "$":
-                tl.append(["<lc>", word])
-            else:
-                tl.append(["<idk_man>", word])
-                error("Unknown token: " + word, line)
-                return [0 , 0]
-
-        tokens.append(tl)
-
-    return [code_lines, tokens]
 ######################################################################################
 def evaluate(expr, symbols, address):
     sign, pop, result = 1, 2, 0
