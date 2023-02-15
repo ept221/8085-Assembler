@@ -716,7 +716,6 @@ def parse_code(tokens, symbols, code, line):
 #          | <symbol> <drct_w> <expr>
 #          | <drct_s> <quote> { <string_seg> } <quote>
 #
-# <numb> ::= <08nm> | <16nm> | <symbol> | <lc>
 # <numb> ::= <hex_num> | <dec_num> | <bin_num> | <symbol> | <lc>
 ##############################################################################################################
 def parse_line(tokens, symbols, code, line):
