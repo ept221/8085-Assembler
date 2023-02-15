@@ -549,7 +549,6 @@ def parse_code(tokens, symbols, code, line):
             return er
         data.append(expr)
 
-        #expr_str = " ".join([x[1] for x in expr[1:]])
         expr_str = expr_to_str(expr)
         if(inst in instructions.instructions):
             code.write(instructions.instructions[inst],line,instrct=inst+" "+expr_str)
@@ -632,7 +631,6 @@ def parse_code(tokens, symbols, code, line):
         data.append(expr)
         instStr = inst+" "+reg
 
-        #expr_str = " ".join([x[1] for x in expr[1:]])
         expr_str = expr_to_str(expr)
         if(instStr in instructions.instructions):
             code.write(instructions.instructions[instStr],line,instrct=instStr+", "+expr_str)
