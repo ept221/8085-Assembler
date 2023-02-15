@@ -417,12 +417,8 @@ def parse_drct(tokens, symbols, code, line):
         return data
     ##################################################
     # [drct_p]
-    elif(tokens[0][0] in {"<drct_p>", "<08nm>"}):
+    elif(tokens[0][0] == "<drct_p>"):
         drct_p = tokens[0][1]
-        if(tokens[0][0] == "<08nm>"):
-            if(tokens[0][1] != "DB"):
-                return 0
-            tokens[0][0] = "<drct_p>"
         data.append(tokens.pop(0))
 
         if(not tokens):
@@ -529,11 +525,7 @@ def parse_code(tokens, symbols, code, line):
         return data
     ##################################################
     # [mnm_0_e]
-    elif(tokens[0][0] in {"<mnm_0_e>", "<08nm>"}):
-        if(tokens[0][0] == "<08nm>"):
-            if(tokens[0][1] != "CC"):
-                return 0
-            tokens[0][0] = "<mnm_0_e>"
+    elif(tokens[0][0] == "<mnm_0_e>"):
         inst = tokens[0][1]
         data.append(tokens.pop(0))
 
