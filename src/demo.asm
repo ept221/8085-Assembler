@@ -1,8 +1,8 @@
-;*********************************************************************************          
-; Robot Pet Obstacle Avoidance Program                                           *
-;                                                                                *
-; Ezra Thomas                                                                    *
-;*********************************************************************************
+;***********************************************************************************          
+; Robot Pet Obstacle Avoidance Program                                             *
+;                                                                                  *
+; Ezra Thomas                                                                      *
+;***********************************************************************************
 
             MVI A, 0x00       ; Setup timer B
             OUT 0x44
@@ -37,7 +37,7 @@ START:      MVI A, 0x21       ; Move shaft forward and drive
             MVI A, 0x02       ; Enable front sonar
             OUT 0x43
 
-PING_POLL:  CALL SUB_PING   ; Poll for obstical
+PING_POLL:  CALL SUB_PING     ; Poll for obstical
             CPI 0x4F
             JNC PING_POLL
 
@@ -46,22 +46,22 @@ PING_POLL:  CALL SUB_PING   ; Poll for obstical
 
             MVI A, 0x01       ; Enable left sonar
             OUT 0x43
-            CALL SUB_PING   ; Read left distance
-            MOV L,A         ; Store left distance in L
+            CALL SUB_PING     ; Read left distance
+            MOV L,A           ; Store left distance in L
 
             MVI A, 0x03       ; Enable right sonar
             OUT 0x43
-            CALL SUB_PING   ; Read right distance
+            CALL SUB_PING     ; Read right distance
 
-            CMP L           ; Compare right distance to left distance
-            JC LEFT         ; Turn left if there is more room to the left
-            JZ FLIP         ; Turn left or right if distances are equal
+            CMP L             ; Compare right distance to left distance
+            JC LEFT           ; Turn left if there is more room to the left
+            JZ FLIP           ; Turn left or right if distances are equal
 
-            MVI A, 0x3C           ; Turn shaft right
+            MVI A, 0x3C       ; Turn shaft right
             OUT 0x03
             JMP TURN
 
-LEFT:       MVI A, 0x00           ; Turn shaft left
+LEFT:       MVI A, 0x00       ; Turn shaft left
             OUT 0x03
             JMP TURN
 
@@ -70,19 +70,19 @@ FLIP:       LDA TurnDir
             STA TurnDir
             OUT 0x03
 
-TURN:       IN 0x41               ; Wait for shaft to finish turning
+TURN:       IN 0x41           ; Wait for shaft to finish turning
             ANI 0x08
             JZ TURN
 
-            IN 0x03               ; Turn on drive motor to turn
+            IN 0x03           ; Turn on drive motor to turn
             INR A
             OUT 0x03
 
-            CALL SUB_TURN_DELAY ; Wait for turn to finish 
-            JMP START           ; Loop back to START
-
-SUB_PING:   ; Ping subroutine
-            CALL SUB_DELAY  ; Rest delay
+            CALL SUB_TURN_DELAY    ; Wait for turn to finish 
+            JMP START              ; Loop back to START
+;***********************************************************************************
+SUB_PING:                     ; Ping subroutine
+            CALL SUB_DELAY    ; Rest delay
             LXI B, 0x800A     ; Setup timeout timer
             CALL SUB_TMR
 
@@ -103,23 +103,23 @@ POLL:       IN 0x41           ; Poll for echo or timout
 CLEAR:      MVI A, 0xFF       ; Set distance to max if no object detected
 
 WRITE:      OUT 0x42          ; Write distance to LED readout
-            RET             ; Return, note that distance is in A
-
-SUB_TMR:    MOV A,B         ; Timer subroutine
+            RET               ; Return, note that distance is in A
+;***********************************************************************************
+SUB_TMR:    MOV A,B           ; Timer subroutine
             OUT 0x05
             MOV A,C
             OUT 0x04
-            MVI A, 0xcc
+            MVI A, 0xCC
             OUT 0x00
-            RET             ; Return
-
-SUB_DELAY:  LXI B,0x0C37      ; Delay subroutine for PING refresh (50ms)
+            RET               ; Return
+;***********************************************************************************
+SUB_DELAY:  LXI B, 0x0C37     ; Delay subroutine for PING refresh (50ms)
 DELAYLoop:  DCX B
             MOV A,B
             ORA C
             JNZ DELAYLoop
-            RET             ; Return
-
+            RET               ; Return
+;***********************************************************************************
 SUB_TURN_DELAY: 
             MVI B, 0x08       ; Delay subroutine for turning (2s)
 LOOP1:      MVI C, 0xD6
@@ -130,7 +130,7 @@ LOOP3:      DCR D
             JNZ LOOP2
             DCR B
             JNZ LOOP1
-            RET             ; Return
-
+            RET               ; Return
+;***********************************************************************************
             ORG 0xF4          
 TurnDir:    DB 0x3C
