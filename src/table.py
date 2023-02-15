@@ -131,14 +131,6 @@ reg = {
     'SP',
     'PSW',
     'M',
-    '0',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7'
 }
 
 reserved_mnm_0_e = {key for key in mnm_0_e}
