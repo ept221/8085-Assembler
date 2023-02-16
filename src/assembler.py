@@ -12,8 +12,6 @@ class Symbol:
 
     def __init__(self):
         self.labelDefs = {}
-        self.eightBitDefs = {}
-        self.sixteenBitDefs = {}
         self.defs = {}
         self.expr = []
 
@@ -142,8 +140,6 @@ def lexer(lines):
                         pass
                     elif word in table.mnm_0:
                         tl.append(["<mnm_0>", word])
-                    elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
-                        tl.append(["<08nm>", word])
                     elif word in table.mnm_0_e:
                         tl.append(["<mnm_0_e>", word])
                     elif word in table.mnm_1:
@@ -170,8 +166,12 @@ def lexer(lines):
                         tl.append(["<drct_s>", word])
                     elif re.match(r'^.+:$',word):
                         tl.append(["<lbl_def>", word])
-                    elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
-                        tl.append(["<16nm>", word])
+                    elif(re.match(r'^(0X)[0-9A-F]+$', word)):
+                        tl.append(["<hex_num>", word])
+                    elif(re.match(r'^[0-9]+$', word)):
+                        tl.append(["<dec_num>", word])
+                    elif(re.match(r'^(0B)[0-1]+$', word)):
+                        tl.append(["<bin_num>", word])
                     elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
                         tl.append(["<symbol>", word])
                     elif word == "$":
@@ -194,6 +194,7 @@ def parse_expr(tokens, symbols, code, line):
     data = ["<expr>"]
     er = ["<error>"]
     if not tokens:
+        print("\tno tokens")
         return 0
     ##################################################
     while(tokens):
@@ -204,18 +205,27 @@ def parse_expr(tokens, symbols, code, line):
         if(len(data) > 1 and (not tokens)):
             error("Expression missing number/symbol!",line)
             return er
-        if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>", "<lc>"}):
+        if(tokens[0][0] not in {"<hex_num>", "<dec_num>", "<bin_num>", "<symbol>", "<lc>"}):
             if(tokens[0][0] not in {"<plus>", "<minus>"}):
                 if(len(data) > 1):
                     error("Expression has bad identifier!",line)
                     return er
                 else:
+                    print("\t not expr because got: " + str(tokens[0][0]) + str(tokens[0][1])) 
                     return 0
             else:
                 error("Expression has extra operator!",line)
                 return er
         data.append(tokens.pop(0))
     return data
+##############################################################################################################
+def expr_to_str(expr):
+    expr_str = expr[1][1]
+    if(expr[1][0] != "<plus>" and expr[1][0] != "<minus>" and len(expr) != 1 and expr[1][0] != "<selector>"):
+        expr_str = expr_str + " "
+
+    expr_str += " ".join([x[1] for x in expr[2:]])
+    return expr_str
 ##############################################################################################################
 def evaluate(expr, symbols, address):
     sign, pop, result = 1, 2, 0
@@ -231,24 +241,26 @@ def evaluate(expr, symbols, address):
             pop = 1
             sign = 1
         ###################################
-        if(expr[-1][0] in {"<08nm>", "<16nm>", "<numb>"}):
+        if(expr[-1][0] == "<hex_num>"):
             result += sign*int(expr[-1][1], base=16)
+            expr = expr[:-pop]
+        elif(expr[-1][0] == "<dec_num>"):
+            result += sign*int(expr[-1][1], base=10)
+            expr = expr[:-pop]
+        elif(expr[-1][0] == "<bin_num>"):
+            result += sign*int(expr[-1][1], base=2)
             expr = expr[:-pop]
         elif(expr[-1][0] == "<lc>"):
             result += sign*(address)
             expr = expr[:-pop] 
         else:
-            if(expr[-1][1] in symbols.eightBitDefs):
-                result += sign*int(symbols.eightBitDefs[expr[-1][1]], base=16)
-                expr = expr[:-pop]
-            elif(expr[-1][1] in symbols.sixteenBitDefs):
-                result += sign*int(symbols.sixteenBitDefs[expr[-1][1]], base=16)
-                expr = expr[:-pop]
+            if(expr[-1][1] in symbols.defs):
+                result += sign*int(symbols.defs[expr[-1][1]], base=16)
             elif(expr[-1][1] in symbols.labelDefs):
                 result += sign*int(symbols.labelDefs[expr[-1][1]], base=16)
                 expr = expr[:-pop]
             else:
-                expr += [["<plus>", "+"],["<numb>", hex(result)]]
+                expr += [["<plus>", "+"],["<hex_num>", hex(result)]]
                 return expr
         ###################################
     return [result]
@@ -269,7 +281,7 @@ def parse_lbl_def(tokens, symbols, code, line):
              re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', lbl[:-1])):
             error("Label cannot be hex number!",line)
             return er
-        elif lbl[:-1] in (symbols.eightBitDefs, symbols.sixteenBitDefs):
+        elif lbl[:-1] in symbols.defs:
             error("Label conflicts with previous symbol definition",line)
             return er
         else:
@@ -305,15 +317,12 @@ def db(args, symbols, code, line):
     for expr in args:
         val = evaluate(expr, symbols, code.address)
         if(len(val) == 1):
-            num = val[0]
-            if(num < 0):
-                error("Expression must be positive!",line)
+            numb = val[0]
+            if(numb < -128 or numb > 255):
+                error("Argument must be >= -128 and <= 255",line)
                 return 0
-            elif(num > 255):
-                error("Expression too large! Must evaluate to an 8-bit number!", line)
-                return 0
-            else:
-                code.write(num,line,instrct="DB")
+            numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
+            code.write(numb,line,instrct="DB")
         else:
             error("Expression depends on unresolved symbol!",line)
             return 0
@@ -324,7 +333,7 @@ def equ(args, symbols, code, line):
     if(name in table.reserved):
         error("Cannot use reserved keyword in equ directive!",line)
         return 0
-    elif(name in (symbols.eightBitDefs, symbols.sixteenBitDefs)):
+    elif(name in symbols.defs):
         error("Symbol already defined!",line)
         return 0
     elif(name in symbols.labelDefs):
@@ -333,19 +342,8 @@ def equ(args, symbols, code, line):
 
     val = evaluate(args[1], symbols, code.address)
     if(len(val) == 1):
-        num = val[0]
-        if num > 65535:
-            error("Expression evaluates to value greater than 0xFFFF!",line)
-            return 0
-        elif num > 255:
-            symbols.sixteenBitDefs[name] = '{0:0{1}X}'.format(num,4)
-            return 1
-        elif num >= 0:
-            symbols.eightBitDefs[name] = '{0:0{1}X}'.format(num,2)
-            return 1
-        else:
-            error("Expression must be positive!",line)
-            return 0
+        numb = val[0]
+        symbols.defs[name] = hex(numb)
     else:
         error("Expression depends on unresolved symbol!",line)
         return 0
@@ -353,16 +351,16 @@ def equ(args, symbols, code, line):
 def ds(arg, symbols, code, line):
     val = evaluate(arg, symbols, code.address)
     if(len(val) == 1):
-        num = val[0]
-        if(num < 0):
+        numb = val[0]
+        if(numb < 0):
             error("Expression must be positive!",line)
             return 0
-        elif(num + code.address > 65536):
+        elif(numb + code.address > 65536):
             error("Cannot define that much storage! Only " + str((65536 - code.address)) + 
-                  " bytes left. Overflow by " + str(num + code.address - 65536) + ".",line)
+                  " bytes left. Overflow by " + str(numb + code.address - 65536) + ".",line)
             return 0
         else:
-            code.address += num
+            code.address += numb
             return 1
     else:
         error("Expression depends on unresolved symbol!",line)
@@ -419,12 +417,8 @@ def parse_drct(tokens, symbols, code, line):
         return data
     ##################################################
     # [drct_p]
-    elif(tokens[0][0] in {"<drct_p>", "<08nm>"}):
+    elif(tokens[0][0] == "<drct_p>"):
         drct_p = tokens[0][1]
-        if(tokens[0][0] == "<08nm>"):
-            if(tokens[0][1] != "DB"):
-                return 0
-            tokens[0][0] = "<drct_p>"
         data.append(tokens.pop(0))
 
         if(not tokens):
@@ -531,11 +525,7 @@ def parse_code(tokens, symbols, code, line):
         return data
     ##################################################
     # [mnm_0_e]
-    elif(tokens[0][0] in {"<mnm_0_e>", "<08nm>"}):
-        if(tokens[0][0] == "<08nm>"):
-            if(tokens[0][1] != "CC"):
-                return 0
-            tokens[0][0] = "<mnm_0_e>"
+    elif(tokens[0][0] == "<mnm_0_e>"):
         inst = tokens[0][1]
         data.append(tokens.pop(0))
 
@@ -551,7 +541,7 @@ def parse_code(tokens, symbols, code, line):
             return er
         data.append(expr)
 
-        expr_str = " ".join([x[1] for x in expr[1:]])
+        expr_str = expr_to_str(expr)
         if(inst in instructions.instructions):
             code.write(instructions.instructions[inst],line,instrct=inst+" "+expr_str)
         else:
@@ -561,19 +551,18 @@ def parse_code(tokens, symbols, code, line):
         val = evaluate(expr[1:],symbols,code.address-1)
         if(len(val) == 1):
             numb = val[0]
-            if(numb < 0):
-                error("Expression must be positive!",line)
-                return er
-            elif(table.mnm_0_e[inst] == "data"):
-                if(numb > 255):
-                    error("Expression must evaluate to 8-bit number!",line)
+            if(table.mnm_0_e[inst] == "data"):
+                if(numb < -128 or numb > 255):
+                    error("Argument must be >= -128 and <= 255",line)
                     return er
+                numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
                 code.write(numb,line)
             elif(table.mnm_0_e[inst] == "address"):
-                if(numb > 65535):
-                    error("Expression must evaluate to 16-bit number!",line)
+                if(numb < -32768 or numb > 65535):
+                    error("Argument must be >= 32768 and <= 65535",line)
                     return er
                 else:
+                    numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
                     code.write((numb & 0xff),line)
                     code.write((numb >> 8),line)
         else:
@@ -619,25 +608,22 @@ def parse_code(tokens, symbols, code, line):
             error("Instruction missing comma and argument!",line)
             return er
         if(tokens[0][0] != "<comma>"):
-            if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
-                error("Instruction has bad argument!",line)
-                return er
             error("Instruction missing comma!",line)
             return er
         data.append(tokens.pop(0))
         if(not tokens):
-            error("Instruction missing argument!",line)
+            error("Instruction missing second argument!",line)
             return er
         expr = parse_expr(*args)
         if(not expr):
-            error("Instruction has bad argument!",line)
+            error("Instruction has bad second argument!",line)
             return er
         elif(expr == er):
             return er
         data.append(expr)
         instStr = inst+" "+reg
 
-        expr_str = " ".join([x[1] for x in expr[1:]])
+        expr_str = expr_to_str(expr)
         if(instStr in instructions.instructions):
             code.write(instructions.instructions[instStr],line,instrct=instStr+", "+expr_str)
         else:
@@ -647,19 +633,18 @@ def parse_code(tokens, symbols, code, line):
         val = evaluate(expr[1:],symbols,code.address-1)
         if(len(val) == 1):
             numb = val[0]
-            if(numb < 0):
-                error("Expression must be positive!",line)
-                return er
-            elif(table.mnm_1_e[inst] == "data"):
-                if(numb > 255):
-                    error("Expression must evaluate to 8-bit number!",line)
+            if(table.mnm_1_e[inst] == "data"):
+                if(numb < -128 or numb > 255):
+                    error("Argument must be >= -128 and <= 255",line)
                     return er
+                numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
                 code.write(numb,line)
             elif(table.mnm_1_e[inst] == "address"):
-                if(numb > 65535):
-                    error("Expression must evaluate to 16-bit number!",line)
+                if(numb < -32768 or numb > 65535):
+                    error("Argument must be >= 32768 and <= 65535",line)
                     return er
                 else:
+                    numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
                     code.write((numb & 0xff),line)
                     code.write((numb >> 8),line)
         else:
@@ -721,17 +706,17 @@ def parse_code(tokens, symbols, code, line):
 # <code> ::= <mnm_0>
 #          | <mnm_0_e> <expr>
 #          | <mnm_1> <reg>
-#          | <mnm_1_e> <reg> "," <expr>
-#          | <mnm_2> <reg> "," <reg>
+#          | <mnm_1_e> <reg> <comma> <expr>
+#          | <mnm_2> <reg> <comma> <reg>
 #
 # <expr> ::= [ (<plus> | <minus>) ] <numb> { (<plus> | <minus>) <numb> }
 #
 # <drct> ::= <drct_1> <expr>
-#          | <drct_p> <expr> { ","  <expr> }
+#          | <drct_p> <expr> { <comma>  <expr> }
 #          | <symbol> <drct_w> <expr>
 #          | <drct_s> <quote> { <string_seg> } <quote>
 #
-# <numb> ::= <08nm> | <16nm> | <symbol> | <lc>
+# <numb> ::= <hex_num> | <dec_num> | <bin_num> | <symbol> | <lc>
 ##############################################################################################################
 def parse_line(tokens, symbols, code, line):
     data = ["<line>"]
@@ -790,18 +775,15 @@ def secondPass(symbols, code):
             val = evaluate(expr, symbols, address)
             if(len(val) == 1):
                 numb = val[0]
-                if(numb < 0):
-                    error("Expression must be positive!",line)
-                    return 0
-                elif(kind == "data"):
-                    if(numb > 255):
-                        error("Expression must evaluate to 8-bit number!",line)
+                if(kind == "data"):
+                    if(numb < -128 or numb > 255):
+                        error("Argument must be >= -128 and <= 255",line)
                         return 0
                     else:
                         code.update(numb,i)
                 elif(kind == "address"):
-                    if(numb > 65535):
-                        error("Expression must evaluate to 16-bit number!",line)
+                    if(numb < -32768 or numb > 65535):
+                        error("Argument must be >= 32768 and <= 65535",line)
                         return 0
                     else:
                         code.update((numb & 0xff),i)
