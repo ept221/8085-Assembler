@@ -68,35 +68,35 @@ Sets the origin to the given address. Only forward movement of the origin is per
 ```asm
 ; Example
 ;*******************************************************************************
-        MVI A, 55
-        OUT 42
+        MVI A, 0x55
+        OUT 0x42
         JMP Start
  Start: ORG 0x44
-        MVI A, 32
-        OUT 42
+        MVI A, 0x32
+        OUT 0x42
 ;*******************************************************************************
 ; Assembles to the following:
 
 Address             Label               Instruction         Hex Code            
 --------------------------------------------------------------------------------
-0x0000                                  MVI A, 55           0x3E                
+0x0000                                  MVI A, 0X55         0x3E                
 0x0001                                                      0x55                
-0x0002                                  OUT 42              0xD3                
+0x0002                                  OUT 0X42            0xD3                
 0x0003                                                      0x42                
 0x0004                                  JMP START           0xC3                
 0x0005                                                      0x44                
 0x0006                                                      0x00                
-0x0044              START:              MVI A, 32           0x3E                
+0x0044              START:              MVI A, 0X32         0x3E                
 0x0045                                                      0x32                
-0x0046                                  OUT 42              0xD3                
+0x0046                                  OUT 0X42            0xD3                
 0x0047                                                      0x42  
 ```
 ```asm
 ; Example
 ;*******************************************************************************
       ORG 0x44
-      MVI A, C7
-      OUT 44
+      MVI A, 0xC7
+      OUT 0x44
       ORG 0x00      ; Illegal. Cannot move origin backwards
       JMP 0x0044
 ```
@@ -241,7 +241,7 @@ Address             Instruction         Hex Code
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, 0x55         0x3E                
+0x0000              MVI A, 0X55         0x3E                
 0x0001                                  0x55                
 0x0002              JMP $ + FOO         0xC3                
 0x0003                                  0x07                
