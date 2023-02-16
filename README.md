@@ -121,7 +121,7 @@ Address             Instruction         Hex Code
 0x0004              DB                  0x9C                
 0x0005              HLT                 0x76  
 ```
-#### \<symbol> EQU <8 or 16-bit number>
+#### \<symbol> EQU <16-bit number>
 Equates a symbol with a number.
 ```asm
 ; Example
@@ -140,7 +140,7 @@ Address             Instruction         Hex Code
 0x0003                                  0xF3                
 0x0004                                  0xC5      
 ```
-#### DS <8 or 16-bit number>
+#### DS <16-bit number>
 Defines and reserves the next n-bytes for storage.
 ```asm
 ; Example
