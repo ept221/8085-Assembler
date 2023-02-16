@@ -217,8 +217,8 @@ Address             Instruction         Hex Code
 ```asm
 ; Example with expression resolution in two passes.
 ;***********************************************************
-      MVI A, foo + 0X04
-      foo    EQU   0X30
+      MVI A, foo + 0x04
+      foo    EQU   0x30
 ;***********************************************************
 ; Assembles to the following:
 
