@@ -40,20 +40,12 @@ MVI A, 0x5C ; This is a comment
 ```
 
 ### Constants
-8 and 16-bit constants are given in hex. 8-bit constants must have two digits, and 16-bit constants must have 4-digits.
+Constants are in decimal by default, but hexadecimal and binary are also supported. Constants can also be negative and are stored in two's complement form when assembled.
 ```asm
-MVI A, 0x0C
-MVI A, 0C   ; The "0x" is optional
-MVI A, 7    ; Illegal. 8-bit constants must have two digits
-
-LXI H, 0x03B7
-LXI H, 03B7    ; The "0x" is optional
-LXI H, 3B7     ; Illegal. 16-bit constants must have four digits
-```
-If an 8-bit constant is given where a 16-bit constant is expected, the 8-bit constant will be converted to a 16-bit constant, with the upper 8-bits all zero.
-```asm
-JNZ 0x3FC7  ; Jump-not-zero to 0x3FC7
-JMP FF      ; JMP takes a 16-bit argument, but given 8-bits. Will JMP to 0x00FF
+MVI A, 10     ; Decimal constant
+MVI A, 0x0A   ; Hexadecimal constant
+MVI A, 0b1010 ; Binary constant
+MVI A, -10    ; Negative constant
 ```
 
 ### Label Definitions
@@ -135,14 +127,14 @@ Equates a symbol with a number.
 ; Example
 ;***********************************************************
       foo EQU 0xC5F3
-      MVI A,  33
+      MVI A,  0x33
       LXI H,  foo
 ;***********************************************************
 ; Assembles to the following:
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, 33           0x3E                
+0x0000              MVI A, 0X33         0x3E                
 0x0001                                  0x33                
 0x0002              LXI H, FOO          0x21                
 0x0003                                  0xF3                
@@ -156,7 +148,7 @@ Defines and reserves the next n-bytes for storage.
             JMP END 
 Storage:    DS  0x05
             LDA Storage
-END:        OUT 42
+END:        OUT 0x42
 ;*******************************************************************************
 ; Assembles to the following:
 
@@ -168,7 +160,7 @@ Address             Label               Instruction         Hex Code
 0x0008              STORAGE:            LDA STORAGE         0x3A                
 0x0009                                                      0x03                
 0x000A                                                      0x00                
-0x000B              END:                OUT 42              0xD3                
+0x000B              END:                OUT 0X42            0xD3                
 0x000C                                                      0x42              
 ```
 #### STRING \<string>
@@ -211,37 +203,37 @@ Anytime an instruction or directive requires a numerical argument, an expression
 ```asm
 ; Example with expression resolution in one pass.
 ;***********************************************************
-      foo    EQU   10
-      MVI A, foo - 04
+      foo    EQU   0x10
+      MVI A, foo - 0x04
 ;***********************************************************
 ; Assembles to the following:
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, FOO - 04     0x3E                
+0x0000              MVI A, FOO - 0X04   0x3E                
 0x0001                                  0x0C     
 
 ```
 ```asm
 ; Example with expression resolution in two passes.
 ;***********************************************************
-      MVI A, foo + 04
-      foo    EQU   30
+      MVI A, foo + 0X04
+      foo    EQU   0X30
 ;***********************************************************
 ; Assembles to the following:
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, FOO + 04     0x3E                
+0x0000              MVI A, FOO + 0X04   0x3E                
 0x0001                                  0x34
 ```
 ```asm
 ; Example with expression resolution in two passes, and $
 ;***********************************************************
-      MVI A,  55
+      MVI A,  0x55
       JMP $ + foo
-      foo equ 05
-      DB  $,  $ + 01, $ + foo
+      foo equ 0x05
+      DB  $,  $ + 0x01, $ + foo
       DS  02
       HLT
 ;***********************************************************
@@ -249,7 +241,7 @@ Address             Instruction         Hex Code
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, 55           0x3E                
+0x0000              MVI A, 0x55         0x3E                
 0x0001                                  0x55                
 0x0002              JMP $ + FOO         0xC3                
 0x0003                                  0x07                
