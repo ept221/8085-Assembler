@@ -168,7 +168,7 @@ Writes an ASCII string into memory. Double quotes and backslashes must be escape
 ```asm
 ; Example
 ;*******************************************************************************
-my_str: STRING "The robot says \"Hi!\"\0"
+STRING "The robot says \"Hi!\"\0"
 ;*******************************************************************************
 ; Assembles to the following:
 
