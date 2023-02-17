@@ -362,7 +362,10 @@ def ds(arg, symbols, code, line):
                   " bytes left. Overflow by " + str(numb + code.address - 65536) + ".",line)
             return 0
         else:
-            code.address += numb
+            numb += code.address
+            while(not code.compressed and (numb - code.address) > 0):
+                code.write(0,line)
+            code.address = numb
             return 1
     else:
         error("Expression depends on unresolved symbol!",line)
