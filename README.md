@@ -242,6 +242,7 @@ Address             Instruction         Hex Code
       HLT
 ;***********************************************************
 ; Assembles to the following:
+; (shown in compressed mode, where empty segment isn't displayed) 
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
