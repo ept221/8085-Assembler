@@ -821,6 +821,16 @@ def parse(lines, symbols, code):
 ##############################################################################################################
 def output(code, name, args):
     # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
+    #         0      1            2         3       4                        5          6
+    
+    if(args.binary):
+        name = "out.bin" if not name else name
+        f = open(name,'wb')
+        for l in code.data:
+            f.write(int(l[5], base=16).to_bytes(1,"big"))
+        f.close()
+        return
+
     f = open(name,'w') if name else sys.stdout
 
     width = 0;
@@ -887,8 +897,13 @@ p.add_argument("-H", "--hex", help="include the hex code in output", action="sto
 p.add_argument("-C", "--comment", help="include the comments in output", action="store_true")
 p.add_argument("-c", "--compressed", help="don't include empty segments in output", action="store_true")
 p.add_argument("-s", "--standard", help="equivalent to -A -B -I -H -C -c", action="store_true")
-p.add_argument("-o", "--out", help="output file name (stdout, if not specified)")
+p.add_argument("-b", "--binary", help="output code as binary file (can only be combined with -o)", action="store_true")
+p.add_argument("-o", "--out", help="output file name (if not specified: stdout, unless -b used, then: \"out.bin\")")
 args = p.parse_args();
+
+if(args.binary and (args.lineNum or args.address or args.label or args.instruction or args.comment or
+                    args.compressed or args.standard)):
+    p.error("-b can only be combined with -o")
 
 if(args.source):
     outFile = args.source
