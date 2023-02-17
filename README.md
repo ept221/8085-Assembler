@@ -78,6 +78,7 @@ Sets the origin to the given address. Only forward movement of the origin is per
         OUT 0x42
 ;*******************************************************************************
 ; Assembles to the following:
+; (shown in compressed mode, where empty segment isn't displayed) 
 
 Address             Label               Instruction         Hex Code            
 --------------------------------------------------------------------------------
@@ -153,6 +154,7 @@ Storage:    DS  0x05
 END:        OUT 0x42
 ;*******************************************************************************
 ; Assembles to the following:
+; (shown in compressed mode, where empty segment isn't displayed) 
 
 Address             Label               Instruction         Hex Code            
 --------------------------------------------------------------------------------
