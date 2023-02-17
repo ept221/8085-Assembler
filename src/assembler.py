@@ -7,7 +7,6 @@ import instructions
 
 ##############################################################################################################
 # Support Classes
-
 class Symbol:
 
     def __init__(self):
@@ -21,6 +20,7 @@ class Code:
         self.data = []
         self.address = 0
         self.label = ""
+        self.compressed = False
 
     def write(self, data, line, instrct = ""):
         # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
@@ -305,6 +305,8 @@ def org(arg, symbols, code, line):
             error("Cannot set origin past 0xFFFF!",line)
             return 0
         else:
+            while(not code.compressed and (num - code.address) > 0):
+                code.write(0,line)
             code.address = num
             if(code.label):
                 symbols.labelDefs[code.label[:-1]] = '{0:0{1}X}'.format(num,4)
@@ -880,18 +882,18 @@ p.add_argument("-B", "--label",   help="include the labels in output", action="s
 p.add_argument("-I", "--instruction", help="include the instructions and arguments in output", action="store_true")
 p.add_argument("-H", "--hex", help="include the hex code in output", action="store_true")
 p.add_argument("-C", "--comment", help="include the comments in output", action="store_true")
-p.add_argument("-s", "--standard", help="equivalent to -A -B -I -H -C", action="store_true")
+p.add_argument("-c", "--compressed", help="don't include empty segments in output", action="store_true")
+p.add_argument("-s", "--standard", help="equivalent to -A -B -I -H -C -c", action="store_true")
 p.add_argument("-o", "--out", help="output file name (stdout, if not specified)")
 args = p.parse_args();
-
-if(args.standard and (args.address or args.label or args.instruction and args.hex and args.comment)):
-    p.error("-s is mutually exclusive with (-A, -B, -I, -H, -C")
 
 if(args.source):
     outFile = args.source
 
 if(args.standard):
-    args.address, args.label, args.instruction, args.hex, args.comment = True, True, True, True, True
+    args.address, args.label, args.instruction, args.hex, args.comment, args.compressed = True, True, True, True, True, True
+
+code.compressed = args.compressed
 
 parse(read(args.source),symbols,code)
 output(code, (args.out if args.out else ""), args)
