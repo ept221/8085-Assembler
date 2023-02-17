@@ -12,7 +12,7 @@ python3 assembler.py demo.asm -s
 
 ## Usage
 ```
-usage: assembler.py [-h] [-L] [-A] [-B] [-I] [-H] [-C] [-c] [-s] [-o OUT] source
+usage: assembler.py [-h] [-L] [-A] [-B] [-I] [-H] [-C] [-c] [-s] [-b] [-o OUT] source
 
 A simple 8085 assembler.
 
@@ -29,7 +29,8 @@ options:
   -C, --comment      include the comments in output
   -c, --compressed   don't include empty segments in output
   -s, --standard     equivalent to -A -B -I -H -C -c
-  -o OUT, --out OUT  output file name (stdout, if not specified)
+  -b, --binary       output code as binary file (can only be combined with -o)
+  -o OUT, --out OUT  output file name (if not specified: stdout, unless -b used, then: "out.bin")
   ```
 ## Source File Syntax
 The assembler is case insensitive.
