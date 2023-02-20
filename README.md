@@ -51,7 +51,7 @@ MVI A, -10    ; Negative constant
 ```
 
 ### Label Definitions
-Label definitions may be any string ending with a colon, where the string does not match the pattern of an 8 or 16-bit constant.
+Label definitions may be any string ending with a colon, where the string does not match the pattern of a constant.
 
 ```asm
   ; Example
