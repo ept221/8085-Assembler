@@ -110,6 +110,7 @@ drct_1 = {
 
 drct_p = {
 	'DB',
+    'DW',
 }
 
 drct_w = {

@@ -124,6 +124,29 @@ Address             Instruction         Hex Code
 0x0004              DB                  0x9C                
 0x0005              HLT                 0x76  
 ```
+
+#### DW <16-bit-data>, ...
+Writes one or more data word sequentially into memory.
+```asm
+; Example
+;***********************************************************
+      MVI A, 33
+      DW     0xDEAD, 0xBEEF
+      HLT
+;***********************************************************
+; Assembles to the following:
+
+Address             Instruction         Hex Code            
+------------------------------------------------------------
+0x0000              MVI A, 33           0x3E                
+0x0001                                  0x21                
+0x0002              DW                  0xAD                
+0x0003              DW                  0xDE                
+0x0004              DW                  0xEF                
+0x0005              DW                  0xBE                
+0x0006              HLT                 0x76  
+```
+
 #### \<symbol> EQU <16-bit number>
 Equates a symbol with a number.
 ```asm

@@ -330,6 +330,23 @@ def db(args, symbols, code, line):
             return 0
     return 1
 ##############################################################################################################
+def dw(args, symbols, code, line):
+    for expr in args:
+        val = evaluate(expr, symbols, code.address)
+        if(len(val) == 1):
+            numb = val[0]
+            if(numb < -32768 or numb > 65535):
+                error("Argument must be >= 32768 and <= 65535",line)
+                print(numb)
+                return 0
+            numb = numb if (numb >= 0) else (65535 - abs(numb) + 1)
+            code.write(numb & 0xFF,line,instrct="DW")
+            code.write(numb >> 8,line,instrct="DW")
+        else:
+            error("Expression depends on unresolved symbol!",line)
+            return 0
+    return 1
+##############################################################################################################
 def equ(args, symbols, code, line):
     name = args[0][1]
     if(name in table.reserved):
@@ -390,6 +407,7 @@ directives = {
     # -1 means no bound
     "ORG": [org, 1, 1, "ORG"],
     "DB":  [db, 1, -1, "DB"],
+    "DW":  [dw, 1, -1, "DW"],
     "EQU": [equ, 2, 2, "EQU"],
     "DS":  [ds, 1, 1, "DS"],
     "STRING": [store_string, 3, -1, "STRING"],
