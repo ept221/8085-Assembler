@@ -62,7 +62,7 @@ Label definitions may be any string ending with a colon, where the string does n
   ;*******************************************************************************
         MVI A, 0x5C
   0xFD: DCR A         ; Illegal. Label definition cannot match hex constant format
-        JNZ FD
+        JNZ 0xFD
 ```
 ### Directives
 #### ORG <16-bit-address>
