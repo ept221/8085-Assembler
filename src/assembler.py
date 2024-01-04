@@ -293,58 +293,54 @@ def parse_lbl_def(tokens, symbols, code, line):
 ##############################################################################################################
 def org(arg, symbols, code, line):
     val = evaluate(arg, symbols, code.address)
-    if(len(val) == 1):
-        num = val[0]
-        if(num < 0):
-            error("Expression must be positive!",line)
-            return 0
-        elif(num < code.address):
-            error("Cannot move origin backwards!",line)
-            return 0
-        elif(num > 65535):
-            error("Cannot set origin past 0xFFFF!",line)
-            return 0
-        else:
-            while(not code.compressed and (num - code.address) > 0):
-                code.write(0,line)
-            code.address = num
-            if(code.label):
-                symbols.labelDefs[code.label[:-1]] = '{0:0{1}X}'.format(num,4)
-            return 1
-    else:
+
+    if(len(val) != 1):
         error("Expression depends on unresolved symbol!",line)
         return 0
+    numb = val[0]
+    if(numb < 0):
+        error("Expression must be positive!",line)
+        return 0
+    if(numb < code.address):
+        error("Cannot move origin backwards!",line)
+        return 0
+    if(numb > 65535):
+        error("Cannot set origin past 0xFFFF!",line)
+        return 0
+    while(not code.compressed and (numb - code.address) > 0):
+        code.write(0,line)
+    code.address = numb
+    if(code.label):
+        symbols.labelDefs[code.label[:-1]] = '{0:0{1}X}'.format(numb,4)
+    return 1
 ##############################################################################################################
 def db(args, symbols, code, line):
     for expr in args:
         val = evaluate(expr, symbols, code.address)
-        if(len(val) == 1):
-            numb = val[0]
-            if(numb < -128 or numb > 255):
-                error("Argument must be >= -128 and <= 255",line)
-                return 0
-            numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
-            code.write(numb,line,instrct="DB")
-        else:
+        if(len(val) != 1):
             error("Expression depends on unresolved symbol!",line)
             return 0
+        numb = val[0]
+        if(numb < -128 or numb > 255):
+            error("Argument must be >= -128 and <= 255",line)
+            return 0
+        numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
+        code.write(numb,line,instrct="DB")
     return 1
 ##############################################################################################################
 def dw(args, symbols, code, line):
     for expr in args:
         val = evaluate(expr, symbols, code.address)
-        if(len(val) == 1):
-            numb = val[0]
-            if(numb < -32768 or numb > 65535):
-                error("Argument must be >= 32768 and <= 65535",line)
-                print(numb)
-                return 0
-            numb = numb if (numb >= 0) else (65535 - abs(numb) + 1)
-            code.write(numb & 0xFF,line,instrct="DW")
-            code.write(numb >> 8,line,instrct="DW")
-        else:
+        if(len(val) != 1):
             error("Expression depends on unresolved symbol!",line)
             return 0
+        numb = val[0]
+        if(numb < -32768 or numb > 65535):
+            error("Argument must be >= 32768 and <= 65535",line)
+            return 0
+        numb = numb if (numb >= 0) else (65535 - abs(numb) + 1)
+        code.write(numb & 0xFF,line,instrct="DW")
+        code.write(numb >> 8,line,instrct="DW")
     return 1
 ##############################################################################################################
 def equ(args, symbols, code, line):
@@ -352,41 +348,41 @@ def equ(args, symbols, code, line):
     if(name in table.reserved):
         error("Cannot use reserved keyword in equ directive!",line)
         return 0
-    elif(name in symbols.defs):
+    if(name in symbols.defs):
         error("Symbol already defined!",line)
         return 0
-    elif(name in symbols.labelDefs):
+    if(name in symbols.labelDefs):
         error("Symbol conflicts with previous label definition!",line)
         return 0
 
     val = evaluate(args[1], symbols, code.address)
-    if(len(val) == 1):
-        numb = val[0]
-        symbols.defs[name] = hex(numb)
-    else:
+    if(len(val) != 1):
         error("Expression depends on unresolved symbol!",line)
         return 0
+
+    numb = val[0]
+    symbols.defs[name] = hex(numb)
+    return 1
 ##############################################################################################################
 def ds(arg, symbols, code, line):
     val = evaluate(arg, symbols, code.address)
-    if(len(val) == 1):
-        numb = val[0]
-        if(numb < 0):
-            error("Expression must be positive!",line)
-            return 0
-        elif(numb + code.address > 65536):
-            error("Cannot define that much storage! Only " + str((65536 - code.address)) + 
-                  " bytes left. Overflow by " + str(numb + code.address - 65536) + ".",line)
-            return 0
-        else:
-            numb += code.address
-            while(not code.compressed and (numb - code.address) > 0):
-                code.write(0,line)
-            code.address = numb
-            return 1
-    else:
+    if(len(val) != 1):
         error("Expression depends on unresolved symbol!",line)
         return 0
+    numb = val[0]
+    if(numb < 0):
+        error("Expression must be positive!",line)
+        return 0
+    if(numb + code.address > 65536):
+        error("Cannot define that much storage! Only " + str((65536 - code.address)) + 
+               " bytes left. Overflow by " + str(numb + code.address - 65536) + ".",line)
+        return 0
+
+    numb += code.address
+    while(not code.compressed and (numb - code.address) > 0):
+        code.write(0,line)
+    code.address = numb
+    return 1
 ##############################################################################################################
 def store_string(arg, symbols, code, line):
     for char in arg:
@@ -565,11 +561,10 @@ def parse_code(tokens, symbols, code, line):
         data.append(expr)
 
         expr_str = expr_to_str(expr)
-        if(inst in instructions.instructions):
-            code.write(instructions.instructions[inst],line,instrct=inst+" "+expr_str)
-        else:
+        if(inst not in instructions.instructions):
             error("Bad instruction: "+inst,line)
             return er
+        code.write(instructions.instructions[inst],line,instrct=inst+" "+expr_str)
 
         val = evaluate(expr[1:],symbols,code.address-1)
         if(len(val) == 1):
@@ -584,10 +579,9 @@ def parse_code(tokens, symbols, code, line):
                 if(numb < -32768 or numb > 65535):
                     error("Argument must be >= 32768 and <= 65535",line)
                     return er
-                else:
-                    numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
-                    code.write((numb & 0xff),line)
-                    code.write((numb >> 8),line)
+                numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
+                code.write((numb & 0xff),line)
+                code.write((numb >> 8),line)
         else:
             symbols.expr.append([val,table.mnm_0_e[inst]])
             code.write("expr",line)
@@ -608,11 +602,10 @@ def parse_code(tokens, symbols, code, line):
             return er
         reg = tokens[0][1]
         data.append(tokens.pop(0))
-        if(inst+" "+reg in instructions.instructions):
-            code.write(instructions.instructions[inst+" "+reg],line,instrct=inst+" "+reg)
-        else:
+        if(inst+" "+reg not in instructions.instructions):
             error("Bad instruction: "+inst+" "+reg,line)
             return er
+        code.write(instructions.instructions[inst+" "+reg],line,instrct=inst+" "+reg)
         return data
     ##################################################
     # [mnm_1_e]
@@ -647,11 +640,10 @@ def parse_code(tokens, symbols, code, line):
         instStr = inst+" "+reg
 
         expr_str = expr_to_str(expr)
-        if(instStr in instructions.instructions):
-            code.write(instructions.instructions[instStr],line,instrct=instStr+", "+expr_str)
-        else:
+        if(instStr not in instructions.instructions):
             error("Bad instruction: "+instStr,line)
             return er
+        code.write(instructions.instructions[instStr],line,instrct=instStr+", "+expr_str)
 
         val = evaluate(expr[1:],symbols,code.address-1)
         if(len(val) == 1):
@@ -666,10 +658,9 @@ def parse_code(tokens, symbols, code, line):
                 if(numb < -32768 or numb > 65535):
                     error("Argument must be >= 32768 and <= 65535",line)
                     return er
-                else:
-                    numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
-                    code.write((numb & 0xff),line)
-                    code.write((numb >> 8),line)
+                numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
+                code.write((numb & 0xff),line)
+                code.write((numb >> 8),line)
         else:
             symbols.expr.append([val,table.mnm_1_e[inst]])
             code.write("expr",line)
@@ -711,11 +702,10 @@ def parse_code(tokens, symbols, code, line):
         data.append(tokens.pop(0))
 
         instStr = inst+" "+reg1+","+reg2
-        if(instStr in instructions.instructions):
-            code.write(instructions.instructions[instStr],line,instrct=instStr)
-        else:
+        if(instStr not in instructions.instructions):
             error("Bad instruction: "+instStr,line)
             return er
+        code.write(instructions.instructions[instStr],line,instrct=instStr)
         return data
 
     return 0
@@ -796,25 +786,23 @@ def secondPass(symbols, code):
         if(data == "expr"):
             expr, kind  = symbols.expr.pop(0)
             val = evaluate(expr, symbols, address)
-            if(len(val) == 1):
-                numb = val[0]
-                if(kind == "data"):
-                    if(numb < -128 or numb > 255):
-                        error("Argument must be >= -128 and <= 255",line)
-                        return 0
-                    else:
-                        code.update(numb,i)
-                elif(kind == "address"):
-                    if(numb < -32768 or numb > 65535):
-                        error("Argument must be >= 32768 and <= 65535",line)
-                        return 0
-                    else:
-                        code.update((numb & 0xff),i)
-                        code.update((numb >> 8),i+1)
-                        i += 1
-            else:
+            if(len(val) != 1):
                 error("Expression relies on unresolved symbol!",line)
                 return 0
+
+            numb = val[0]
+            if(kind == "data"):
+                if(numb < -128 or numb > 255):
+                    error("Argument must be >= -128 and <= 255",line)
+                    return 0
+                code.update(numb,i)
+            elif(kind == "address"):
+                if(numb < -32768 or numb > 65535):
+                    error("Argument must be >= 32768 and <= 65535",line)
+                    return 0
+                code.update((numb & 0xff),i)
+                code.update((numb >> 8),i+1)
+                i += 1
         else:
             address = int(codeLine[2], base=16) 
         i += 1
