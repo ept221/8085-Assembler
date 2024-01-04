@@ -277,9 +277,10 @@ def parse_lbl_def(tokens, symbols, code, line):
         elif lbl[:-1] in table.reserved:
             error("Label cannot be keyword!",line)
             return er
-        elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', lbl[:-1]) or
-             re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', lbl[:-1])):
-            error("Label cannot be hex number!",line)
+        elif(re.match(r'(0X)[0-9A-F]+$', lbl[:-1]) or
+             re.match(r'[0-9]+$', lbl[:-1]) or
+             re.match(r'(0B)[0-1]+$', lbl[:-1])):
+            error("Label cannot be a number!",line)
             return er
         elif lbl[:-1] in symbols.defs:
             error("Label conflicts with previous symbol definition",line)
