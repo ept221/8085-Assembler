@@ -337,7 +337,7 @@ def dw(args, symbols, code, line):
             return 0
         numb = val[0]
         if(numb < -32768 or numb > 65535):
-            error("Argument must be >= 32768 and <= 65535",line)
+            error("Argument must be >= -32768 and <= 65535",line)
             return 0
         numb = numb if (numb >= 0) else (65535 - abs(numb) + 1)
         code.write(numb & 0xFF,line,instrct="DW")
@@ -581,8 +581,8 @@ def parse_code(tokens, symbols, code, line):
                 numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
                 code.write(numb,line)
             elif(table.mnm_0_e[inst] == "address"):
-                if(numb < -32768 or numb > 65535):
-                    error("Argument must be >= 32768 and <= 65535",line)
+                if(numb < 0 or numb > 65535):
+                    error("Argument must be >= 0 and <= 65535",line)
                     return er
                 numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
                 code.write((numb & 0xff),line)
@@ -660,8 +660,8 @@ def parse_code(tokens, symbols, code, line):
                 numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
                 code.write(numb,line)
             elif(table.mnm_1_e[inst] == "address"):
-                if(numb < -32768 or numb > 65535):
-                    error("Argument must be >= 32768 and <= 65535",line)
+                if(numb < 0 or numb > 65535):
+                    error("Argument must be >= 0 and <= 65535",line)
                     return er
                 numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
                 code.write((numb & 0xff),line)
@@ -802,8 +802,8 @@ def secondPass(symbols, code):
                     return 0
                 code.update(numb,i)
             elif(kind == "address"):
-                if(numb < -32768 or numb > 65535):
-                    error("Argument must be >= 32768 and <= 65535",line)
+                if(numb < 0 or numb > 65535):
+                    error("Argument must be >= 0 and <= 65535",line)
                     return 0
                 code.update((numb & 0xff),i)
                 code.update((numb >> 8),i+1)
