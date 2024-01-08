@@ -194,7 +194,6 @@ def parse_expr(tokens, symbols, code, line):
     data = ["<expr>"]
     er = ["<error>"]
     if not tokens:
-        print("\tno tokens")
         return 0
     ##################################################
     while(tokens):
@@ -211,7 +210,6 @@ def parse_expr(tokens, symbols, code, line):
                     error("Expression has bad identifier!",line)
                     return er
                 else:
-                    print("\t not expr because got: " + str(tokens[0][0]) + str(tokens[0][1])) 
                     return 0
             else:
                 error("Expression has extra operator!",line)
@@ -223,7 +221,7 @@ def expr_to_str(expr):
     expr_str = expr[1][1]
     if(expr[1][0] != "<plus>" and expr[1][0] != "<minus>" and len(expr) != 1):
         expr_str = expr_str + " "
-        
+
     expr_str += " ".join([x[1] for x in expr[2:]])
     return expr_str
 ##############################################################################################################
