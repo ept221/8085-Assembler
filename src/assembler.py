@@ -584,7 +584,6 @@ def parse_code(tokens, symbols, code, line):
                 if(numb < 0 or numb > 65535):
                     error("Argument must be >= 0 and <= 65535",line)
                     return er
-                numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
                 code.write((numb & 0xff),line)
                 code.write((numb >> 8),line)
         else:
@@ -663,7 +662,6 @@ def parse_code(tokens, symbols, code, line):
                 if(numb < 0 or numb > 65535):
                     error("Argument must be >= 0 and <= 65535",line)
                     return er
-                numb = numb if (numb >= 0) else (255 - abs(numb) + 1)
                 code.write((numb & 0xff),line)
                 code.write((numb >> 8),line)
         else:
