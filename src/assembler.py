@@ -221,9 +221,9 @@ def parse_expr(tokens, symbols, code, line):
 ##############################################################################################################
 def expr_to_str(expr):
     expr_str = expr[1][1]
-    if(expr[1][0] != "<plus>" and expr[1][0] != "<minus>" and len(expr) != 1 and expr[1][0] != "<selector>"):
+    if(expr[1][0] != "<plus>" and expr[1][0] != "<minus>" and len(expr) != 1):
         expr_str = expr_str + " "
-
+        
     expr_str += " ".join([x[1] for x in expr[2:]])
     return expr_str
 ##############################################################################################################
