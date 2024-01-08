@@ -4,7 +4,7 @@ import sys
 import argparse
 import table
 import instructions
-
+import warnings
 ##############################################################################################################
 # Support Classes
 class Symbol:
@@ -391,7 +391,11 @@ def store_string(arg, symbols, code, line):
             error("Unsupported character in string: " + str(char),line)
             return 0
 
-    new_str = bytes(arg,"utf-8").decode("unicode_escape")
+    try:
+        new_str = bytes(arg,"utf-8").decode("unicode_escape")
+    except:
+        error("Unsupported escape sequence in string!",line)
+        return 0
 
     for char in new_str:
         code.write(ord(char),line,instrct="STRING")
@@ -887,6 +891,8 @@ def output(code, name, args):
         f.close()
 ##############################################################################################################
 # Main program
+
+warnings.filterwarnings("error",category=DeprecationWarning)
 
 code = Code()
 symbols = Symbol()
