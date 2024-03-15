@@ -132,23 +132,22 @@ def lexer(lines):
                 else:
                     block[1].append(word)
                     word = word.strip()
-                    word = word.upper()
                     if(word == "\""):
                         tl.append(["<quote>", word])
                         stringCapture = True
                     elif(re.match(r'^\s*$',word)):
                         pass
-                    elif word in table.mnm_0:
+                    elif word.upper() in table.mnm_0:
                         tl.append(["<mnm_0>", word])
-                    elif word in table.mnm_0_e:
+                    elif word.upper() in table.mnm_0_e:
                         tl.append(["<mnm_0_e>", word])
-                    elif word in table.mnm_1:
+                    elif word.upper() in table.mnm_1:
                         tl.append(["<mnm_1>", word])
-                    elif word in table.mnm_1_e:
+                    elif word.upper() in table.mnm_1_e:
                         tl.append(["<mnm_1_e>", word])
-                    elif word in table.mnm_2:
+                    elif word.upper() in table.mnm_2:
                         tl.append(["<mnm_2>", word])
-                    elif word in table.reg:
+                    elif word.upper() in table.reg:
                         tl.append(["<reg>", word])
                     elif word == ",":
                         tl.append(["<comma>", word])
@@ -156,22 +155,24 @@ def lexer(lines):
                         tl.append(["<plus>", word])
                     elif word == "-":
                         tl.append(["<minus>", word])
-                    elif word in table.drct_1:
+                    elif word.upper() in table.drct_1:
                         tl.append(["<drct_1>", word])
-                    elif word in table.drct_p:
+                    elif word.upper() in table.drct_p:
                         tl.append(["<drct_p>", word])
-                    elif word in table.drct_w:
+                    elif word.upper() in table.drct_w:
                         tl.append(["<drct_w>", word])
-                    elif word in table.drct_s:
+                    elif word.upper() in table.drct_s:
                         tl.append(["<drct_s>", word])
-                    elif re.match(r'^.+:$',word):
+                    elif(re.match(r'^.+:$',word)):
                         tl.append(["<lbl_def>", word])
-                    elif(re.match(r'^(0X)[0-9A-F]+$', word)):
+                    elif(re.match(r'^(0X|0x)[0-9a-fA-F]+$', word)):
                         tl.append(["<hex_num>", word])
                     elif(re.match(r'^[0-9]+$', word)):
                         tl.append(["<dec_num>", word])
-                    elif(re.match(r'^(0B)[0-1]+$', word)):
+                    elif(re.match(r'^(0B|0b)[0-1]+$', word)):
                         tl.append(["<bin_num>", word])
+                    elif(re.match(r'^\'([^\'\\]|\\.)\'', word)):
+                        tl.append(["<char>", word[1:-1]])
                     elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
                         tl.append(["<symbol>", word])
                     elif word == "$":
@@ -204,7 +205,13 @@ def parse_expr(tokens, symbols, code, line):
         if(len(data) > 1 and (not tokens)):
             error("Expression missing number/symbol!",line)
             return er
-        if(tokens[0][0] not in {"<hex_num>", "<dec_num>", "<bin_num>", "<symbol>", "<lc>"}):
+        if(tokens[0][0] == "<char>"):
+            try:
+                bytes(tokens[0][1],"utf-8").decode("unicode_escape")
+            except:
+                error("Unsupported escape sequence for char!!",line)
+                return er
+        if(tokens[0][0] not in {"<hex_num>", "<dec_num>", "<bin_num>", "<symbol>", "<lc>", "<char>"}):
             if(tokens[0][0] not in {"<plus>", "<minus>"}):
                 if(len(data) > 1):
                     error("Expression has bad identifier!",line)
@@ -248,6 +255,11 @@ def evaluate(expr, symbols, address):
         elif(expr[-1][0] == "<bin_num>"):
             result += sign*int(expr[-1][1], base=2)
             expr = expr[:-pop]
+        elif(expr[-1][0] == "<char>"):
+            print("wow:")
+            print(bytes(expr[-1][1],"utf-8").decode("unicode_escape"))
+            result += sign*ord(bytes(expr[-1][1],"utf-8").decode("unicode_escape"))
+            expr = expr[:-pop]
         elif(expr[-1][0] == "<lc>"):
             result += sign*(address)
             expr = expr[:-pop] 
@@ -275,9 +287,9 @@ def parse_lbl_def(tokens, symbols, code, line):
         elif lbl[:-1] in table.reserved:
             error("Label cannot be keyword!",line)
             return er
-        elif(re.match(r'(0X)[0-9A-F]+$', lbl[:-1]) or
+        elif(re.match(r'(0X|0x)[0-9a-fA-F]+$', lbl[:-1]) or
              re.match(r'[0-9]+$', lbl[:-1]) or
-             re.match(r'(0B)[0-1]+$', lbl[:-1])):
+             re.match(r'(0B|0b)[0-1]+$', lbl[:-1])):
             error("Label cannot be a number!",line)
             return er
         elif lbl[:-1] in symbols.defs:
@@ -730,7 +742,7 @@ def parse_code(tokens, symbols, code, line):
 #          | <symbol> <drct_w> <expr>
 #          | <drct_s> <quote> { <string_seg> } <quote>
 #
-# <numb> ::= <hex_num> | <dec_num> | <bin_num> | <symbol> | <lc>
+# <numb> ::= <hex_num> | <dec_num> | <bin_num> | <symbol> | <lc> | <char>
 ##############################################################################################################
 def parse_line(tokens, symbols, code, line):
     data = ["<line>"]

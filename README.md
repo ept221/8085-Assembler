@@ -33,7 +33,6 @@ options:
   -o OUT, --out OUT  output file name (if not specified: stdout, unless -b used, then: "out.bin")
   ```
 ## Source File Syntax
-The assembler is case insensitive.
 
 ### Comments
 Comments begin with semicolons.
