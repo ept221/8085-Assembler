@@ -209,7 +209,7 @@ def parse_expr(tokens, symbols, code, line):
             try:
                 bytes(tokens[0][1],"utf-8").decode("unicode_escape")
             except:
-                error("Unsupported escape sequence for char!!",line)
+                error("Unsupported escape sequence for char!",line)
                 return er
         if(tokens[0][0] not in {"<hex_num>", "<dec_num>", "<bin_num>", "<symbol>", "<lc>", "<char>"}):
             if(tokens[0][0] not in {"<plus>", "<minus>"}):
