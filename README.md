@@ -83,16 +83,16 @@ Sets the origin to the given address. Only forward movement of the origin is per
 
 Address             Label               Instruction         Hex Code            
 --------------------------------------------------------------------------------
-0x0000                                  MVI A, 0X55         0x3E                
+0x0000                                  MVI A, 0x55         0x3E                
 0x0001                                                      0x55                
-0x0002                                  OUT 0X42            0xD3                
+0x0002                                  OUT 0x42            0xD3                
 0x0003                                                      0x42                
-0x0004                                  JMP START           0xC3                
+0x0004                                  JMP Start           0xC3                
 0x0005                                                      0x44                
 0x0006                                                      0x00                
-0x0044              START:              MVI A, 0X32         0x3E                
+0x0044              Start:              MVI A, 0x32         0x3E                
 0x0045                                                      0x32                
-0x0046                                  OUT 0X42            0xD3                
+0x0046                                  OUT 0x42            0xD3                
 0x0047                                                      0x42  
 ```
 ```asm
@@ -161,9 +161,9 @@ Equates a symbol with a number.
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, 0X33         0x3E                
+0x0000              MVI A, 0x33         0x3E                
 0x0001                                  0x33                
-0x0002              LXI H, FOO          0x21                
+0x0002              LXI H, foo          0x21                
 0x0003                                  0xF3                
 0x0004                                  0xC5      
 ```
@@ -188,7 +188,7 @@ Address             Label               Instruction         Hex Code
 0x0008              STORAGE:            LDA STORAGE         0x3A                
 0x0009                                                      0x03                
 0x000A                                                      0x00                
-0x000B              END:                OUT 0X42            0xD3                
+0x000B              END:                OUT 0x42            0xD3                
 0x000C                                                      0x42              
 ```
 #### STRING \<string>
@@ -238,7 +238,7 @@ Anytime an instruction or directive requires a numerical argument, an expression
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, FOO - 0X04   0x3E                
+0x0000              MVI A, foo - 0X04   0x3E                
 0x0001                                  0x0C     
 
 ```
@@ -252,7 +252,7 @@ Address             Instruction         Hex Code
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, FOO + 0X04   0x3E                
+0x0000              MVI A, foo + 0X04   0x3E                
 0x0001                                  0x34
 ```
 ```asm
@@ -270,9 +270,9 @@ Address             Instruction         Hex Code
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, 0X55         0x3E                
+0x0000              MVI A, 0x55         0x3E                
 0x0001                                  0x55                
-0x0002              JMP $ + FOO         0xC3                
+0x0002              JMP $ + foo         0xC3                
 0x0003                                  0x07                
 0x0004                                  0x00                
 0x0005              DB                  0x05                
