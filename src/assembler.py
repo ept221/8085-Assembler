@@ -256,8 +256,6 @@ def evaluate(expr, symbols, address):
             result += sign*int(expr[-1][1], base=2)
             expr = expr[:-pop]
         elif(expr[-1][0] == "<char>"):
-            print("wow:")
-            print(bytes(expr[-1][1],"utf-8").decode("unicode_escape"))
             result += sign*ord(bytes(expr[-1][1],"utf-8").decode("unicode_escape"))
             expr = expr[:-pop]
         elif(expr[-1][0] == "<lc>"):
