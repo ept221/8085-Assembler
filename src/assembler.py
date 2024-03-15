@@ -49,6 +49,38 @@ class Code:
         self.data[index][5] = '0x{0:0{1}X}'.format(data,2)
 
 ##############################################################################################################
+# A line splitting function for the lexer
+def my_split(line):
+    words = []
+    char_capture = False
+    word = ""
+    for char in line:
+        if(char_capture):
+            if(char == "\'"):
+                if(word and word[-1] != "\\"):
+                    word += char
+                    words.append(word)
+                    word = ""
+                    char_capture = False
+                else:
+                    word += char
+            else:
+                word += char
+        elif(char == "\'"):
+            word += char
+            char_capture = True
+            pass
+        elif(char in [" ", "+","-",";",",","\""]):
+            if(word):
+                words.append(word)
+            words.append(char)
+            word = ""
+        else:
+            word += char
+    if(word):
+        words.append(word)
+    return words
+##############################################################################################################
 # File reading functions
 def read(name):
     # This function reads in lines from the asm file
@@ -76,7 +108,7 @@ def read(name):
         if(line):
             block = []
             block.append([lineNumber, pc])
-            words = re.split(r'(\+|-|;|,|"|\s)', line)
+            words = my_split(line)
             words = list(filter(None, words))
             block.append(words)
             block.append("")    # empty comment
@@ -172,7 +204,7 @@ def lexer(lines):
                     elif(re.match(r'^(0B|0b)[0-1]+$', word)):
                         tl.append(["<bin_num>", word])
                     elif(re.match(r'^\'([^\'\\]|\\.)\'', word)):
-                        tl.append(["<char>", word[1:-1]])
+                        tl.append(["<char>", word])
                     elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
                         tl.append(["<symbol>", word])
                     elif word == "$":
@@ -256,7 +288,7 @@ def evaluate(expr, symbols, address):
             result += sign*int(expr[-1][1], base=2)
             expr = expr[:-pop]
         elif(expr[-1][0] == "<char>"):
-            result += sign*ord(bytes(expr[-1][1],"utf-8").decode("unicode_escape"))
+            result += sign*ord(bytes(expr[-1][1][1:-1],"utf-8").decode("unicode_escape"))
             expr = expr[:-pop]
         elif(expr[-1][0] == "<lc>"):
             result += sign*(address)
