@@ -238,7 +238,7 @@ Anytime an instruction or directive requires a numerical argument, an expression
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, foo - 0X04   0x3E                
+0x0000              MVI A, foo - 0x04   0x3E                
 0x0001                                  0x0C     
 
 ```
@@ -252,7 +252,7 @@ Address             Instruction         Hex Code
 
 Address             Instruction         Hex Code            
 ------------------------------------------------------------
-0x0000              MVI A, foo + 0X04   0x3E                
+0x0000              MVI A, foo + 0x04   0x3E                
 0x0001                                  0x34
 ```
 ```asm
