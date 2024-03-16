@@ -1,6 +1,6 @@
 # 8085-Assembler
 
-A simple Python based 8085 assembler.
+A Python based 8085 assembler.
 
 ## Quickstart
 To clone this repository and assemble the demo file, open a terminal and run:
