@@ -69,7 +69,6 @@ def my_split(line):
         elif(char == "\'"):
             word += char
             char_capture = True
-            pass
         elif(char in [" ", "+","-",";",",","\""]):
             if(word):
                 words.append(word)
