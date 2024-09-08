@@ -104,6 +104,8 @@ def read(name):
     
     for lineNumber, line in enumerate(file, start = 1):
         line = line.strip()
+        # tolerate tabs, convert them to spaces
+        line = re.sub('\t', ' ', line)
         if(line):
             block = []
             block.append([lineNumber, pc])
@@ -163,41 +165,45 @@ def lexer(lines):
                 else:
                     block[1].append(word)
                     word = word.strip()
+                    WORD = word.upper()
                     if(word == "\""):
                         tl.append(["<quote>", word])
                         stringCapture = True
                     elif(re.match(r'^\s*$',word)):
                         pass
-                    elif word.upper() in table.mnm_0:
-                        tl.append(["<mnm_0>", word])
-                    elif word.upper() in table.mnm_0_e:
-                        tl.append(["<mnm_0_e>", word])
-                    elif word.upper() in table.mnm_1:
-                        tl.append(["<mnm_1>", word])
-                    elif word.upper() in table.mnm_1_e:
-                        tl.append(["<mnm_1_e>", word])
-                    elif word.upper() in table.mnm_2:
-                        tl.append(["<mnm_2>", word])
-                    elif word.upper() in table.reg:
-                        tl.append(["<reg>", word])
+                    elif WORD in table.mnm_0:
+                        tl.append(["<mnm_0>", WORD])
+                    elif WORD in table.mnm_0_e:
+                        tl.append(["<mnm_0_e>", WORD])
+                    elif WORD in table.mnm_1:
+                        tl.append(["<mnm_1>", WORD])
+                    elif WORD in table.mnm_1_e:
+                        tl.append(["<mnm_1_e>", WORD])
+                    elif WORD in table.mnm_2:
+                        tl.append(["<mnm_2>", WORD])
+                    elif WORD in table.reg:
+                        tl.append(["<reg>", WORD])
                     elif word == ",":
                         tl.append(["<comma>", word])
                     elif word == "+":
                         tl.append(["<plus>", word])
                     elif word == "-":
                         tl.append(["<minus>", word])
-                    elif word.upper() in table.drct_1:
-                        tl.append(["<drct_1>", word])
-                    elif word.upper() in table.drct_p:
-                        tl.append(["<drct_p>", word])
-                    elif word.upper() in table.drct_w:
-                        tl.append(["<drct_w>", word])
-                    elif word.upper() in table.drct_s:
-                        tl.append(["<drct_s>", word])
+                    elif WORD in table.drct_1:
+                        tl.append(["<drct_1>", WORD])
+                    elif WORD in table.drct_p:
+                        tl.append(["<drct_p>", WORD])
+                    elif WORD in table.drct_w:
+                        tl.append(["<drct_w>", WORD])
+                    elif WORD in table.drct_s:
+                        tl.append(["<drct_s>", WORD])
                     elif(re.match(r'^.+:$',word)):
                         tl.append(["<lbl_def>", word])
                     elif(re.match(r'^(0X|0x)[0-9a-fA-F]+$', word)):
                         tl.append(["<hex_num>", word])
+                    elif(re.match(r'^([0-9a-fA-F]+(H|h))$', word)):
+                        word = re.sub(r'(H|h)', '', word)
+                        tl.append(["<hex_num>", f"0x{word}"])
                     elif(re.match(r'^[0-9]+$', word)):
                         tl.append(["<dec_num>", word])
                     elif(re.match(r'^(0B|0b)[0-1]+$', word)):
