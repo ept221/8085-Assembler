@@ -163,23 +163,24 @@ def lexer(lines):
                 else:
                     block[1].append(word)
                     word = word.strip()
+                    upper_word = word.upper()
                     if(word == "\""):
                         tl.append(["<quote>", word])
                         stringCapture = True
                     elif(re.match(r'^\s*$',word)):
                         pass
                     elif word.upper() in table.mnm_0:
-                        tl.append(["<mnm_0>", word])
+                        tl.append(["<mnm_0>", upper_word])
                     elif word.upper() in table.mnm_0_e:
-                        tl.append(["<mnm_0_e>", word])
+                        tl.append(["<mnm_0_e>", upper_word])
                     elif word.upper() in table.mnm_1:
-                        tl.append(["<mnm_1>", word])
+                        tl.append(["<mnm_1>", upper_word])
                     elif word.upper() in table.mnm_1_e:
-                        tl.append(["<mnm_1_e>", word])
+                        tl.append(["<mnm_1_e>", upper_word])
                     elif word.upper() in table.mnm_2:
-                        tl.append(["<mnm_2>", word])
+                        tl.append(["<mnm_2>", upper_word])
                     elif word.upper() in table.reg:
-                        tl.append(["<reg>", word])
+                        tl.append(["<reg>", upper_word])
                     elif word == ",":
                         tl.append(["<comma>", word])
                     elif word == "+":
@@ -187,13 +188,13 @@ def lexer(lines):
                     elif word == "-":
                         tl.append(["<minus>", word])
                     elif word.upper() in table.drct_1:
-                        tl.append(["<drct_1>", word])
+                        tl.append(["<drct_1>", upper_word])
                     elif word.upper() in table.drct_p:
-                        tl.append(["<drct_p>", word])
+                        tl.append(["<drct_p>", upper_word])
                     elif word.upper() in table.drct_w:
-                        tl.append(["<drct_w>", word])
+                        tl.append(["<drct_w>", upper_word])
                     elif word.upper() in table.drct_s:
-                        tl.append(["<drct_s>", word])
+                        tl.append(["<drct_s>", upper_word])
                     elif(re.match(r'^.+:$',word)):
                         tl.append(["<lbl_def>", word])
                     elif(re.match(r'^(0X|0x)[0-9a-fA-F]+$', word)):
