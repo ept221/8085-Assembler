@@ -639,17 +639,21 @@ def parse_code(tokens, symbols, code, line):
         inst = tokens[0][1]
         data.append(tokens.pop(0))
         if(not tokens):
-            error("Instruction missing register/register-pair",line)
+            error("Instruction missing register/register-pair/rst-code",line)
             return er
-        if(tokens[0][0] != "<reg>"):
+        if(inst == "RST" and tokens[0][0] != "<dec_num>"):
+            print(tokens[0][0])
+            error("Instruction has bad rst code",line)
+            return er
+        elif(inst != "RST" and tokens[0][0] != "<reg>"):
             error("Instruction has bad register/register-pair",line)
             return er
-        reg = tokens[0][1]
+        reg_or_rst = tokens[0][1]
         data.append(tokens.pop(0))
-        if(inst+" "+reg not in instructions.instructions):
-            error("Bad instruction: "+inst+" "+reg,line)
+        if(inst+" "+reg_or_rst not in instructions.instructions):
+            error("Bad instruction: "+inst+" "+reg_or_rst,line)
             return er
-        code.write(instructions.instructions[inst+" "+reg],line,instrct=inst+" "+reg)
+        code.write(instructions.instructions[inst+" "+reg_or_rst],line,instrct=inst+" "+reg_or_rst)
         return data
     ##################################################
     # [mnm_1_e]
@@ -761,7 +765,7 @@ def parse_code(tokens, symbols, code, line):
 #
 # <code> ::= <mnm_0>
 #          | <mnm_0_e> <expr>
-#          | <mnm_1> <reg>
+#          | <mnm_1> (<dec_num> <reg>)
 #          | <mnm_1_e> <reg> <comma> <expr>
 #          | <mnm_2> <reg> <comma> <reg>
 #
