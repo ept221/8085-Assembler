@@ -765,7 +765,7 @@ def parse_code(tokens, symbols, code, line):
 #
 # <code> ::= <mnm_0>
 #          | <mnm_0_e> <expr>
-#          | <mnm_1> (<dec_num> <reg>)
+#          | <mnm_1> (<dec_num> | <reg>)
 #          | <mnm_1_e> <reg> <comma> <expr>
 #          | <mnm_2> <reg> <comma> <reg>
 #
