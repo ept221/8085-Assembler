@@ -25,6 +25,7 @@ mnm_0 = {
 	'RLC',
 	'RRC',
 	'RAL',
+	'RALDE',
 	'RAR',
 	'CMA',
 	'STC',
@@ -36,6 +37,12 @@ mnm_0 = {
 	'HLT',
 	'RIM',
 	'SIM',
+   'DSUB',
+   'RSTV',
+   'LHLX',
+   'RLDE',
+   'ARHL',
+   'SHLX',
 }
 
 mnm_0_e = {
@@ -71,6 +78,10 @@ mnm_0_e = {
     'XRI': "data", 
     'ORI': "data",
     'CPI': "data",
+    'LDHI': "data",
+    'LDSI': "data",
+    'JNK': "address",
+    'JK': "address",
 }
 
 mnm_1 = {

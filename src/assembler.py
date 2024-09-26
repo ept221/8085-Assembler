@@ -163,23 +163,31 @@ def lexer(lines):
                 else:
                     block[1].append(word)
                     word = word.strip()
-                    upper_word = word.upper()
+
+                    # mnemonics or directives sometimes appear as lower case
+                    mnm_word = upper_word = word.upper()
+
+                    # "undocumented" mnemonics usually appear in assembly like this:
+                    #   (SHLD) 0x76
+                    # ...so we remove the perens when checking it as a mnemonic
+                    mnm_word = mnm_word.replace("(", "").replace(")", "") 
+
                     if(word == "\""):
                         tl.append(["<quote>", word])
                         stringCapture = True
                     elif(re.match(r'^\s*$',word)):
                         pass
-                    elif word.upper() in table.mnm_0:
-                        tl.append(["<mnm_0>", upper_word])
-                    elif word.upper() in table.mnm_0_e:
-                        tl.append(["<mnm_0_e>", upper_word])
-                    elif word.upper() in table.mnm_1:
-                        tl.append(["<mnm_1>", upper_word])
-                    elif word.upper() in table.mnm_1_e:
-                        tl.append(["<mnm_1_e>", upper_word])
-                    elif word.upper() in table.mnm_2:
-                        tl.append(["<mnm_2>", upper_word])
-                    elif word.upper() in table.reg:
+                    elif mnm_word in table.mnm_0:
+                        tl.append(["<mnm_0>", mnm_word])
+                    elif mnm_word in table.mnm_0_e:
+                        tl.append(["<mnm_0_e>", mnm_word])
+                    elif mnm_word in table.mnm_1:
+                        tl.append(["<mnm_1>", mnm_word])
+                    elif mnm_word in table.mnm_1_e:
+                        tl.append(["<mnm_1_e>", mnm_word])
+                    elif mnm_word in table.mnm_2:
+                        tl.append(["<mnm_2>", mnm_word])
+                    elif upper_word in table.reg:
                         tl.append(["<reg>", upper_word])
                     elif word == ",":
                         tl.append(["<comma>", word])
@@ -187,13 +195,13 @@ def lexer(lines):
                         tl.append(["<plus>", word])
                     elif word == "-":
                         tl.append(["<minus>", word])
-                    elif word.upper() in table.drct_1:
+                    elif upper_word in table.drct_1:
                         tl.append(["<drct_1>", upper_word])
-                    elif word.upper() in table.drct_p:
+                    elif upper_word in table.drct_p:
                         tl.append(["<drct_p>", upper_word])
-                    elif word.upper() in table.drct_w:
+                    elif upper_word in table.drct_w:
                         tl.append(["<drct_w>", upper_word])
-                    elif word.upper() in table.drct_s:
+                    elif upper_word in table.drct_s:
                         tl.append(["<drct_s>", upper_word])
                     elif(re.match(r'^.+:$',word)):
                         tl.append(["<lbl_def>", word])
@@ -860,7 +868,6 @@ def parse(lines, symbols, code):
     code_lines, tokenLines = lexer(lines)
     if(code_lines == 0):
         sys.exit(1)
-
     tree = []
 
     for tokens, line in zip(tokenLines, code_lines):
