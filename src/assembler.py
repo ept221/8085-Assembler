@@ -187,8 +187,8 @@ def lexer(lines):
                         tl.append(["<mnm_1_e>", mnm_word])
                     elif mnm_word in table.mnm_2:
                         tl.append(["<mnm_2>", mnm_word])
-                    elif mnm_word in table.reg:
-                        tl.append(["<reg>", mnm_word])
+                    elif upper_word in table.reg:
+                        tl.append(["<reg>", upper_word])
                     elif word == ",":
                         tl.append(["<comma>", word])
                     elif word == "+":
