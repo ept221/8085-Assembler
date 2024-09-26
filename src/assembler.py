@@ -296,6 +296,7 @@ def evaluate(expr, symbols, address):
         else:
             if(expr[-1][1] in symbols.defs):
                 result += sign*int(symbols.defs[expr[-1][1]], base=16)
+                expr = expr[:-pop]
             elif(expr[-1][1] in symbols.labelDefs):
                 result += sign*int(symbols.labelDefs[expr[-1][1]], base=16)
                 expr = expr[:-pop]
