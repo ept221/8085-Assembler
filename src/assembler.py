@@ -205,8 +205,21 @@ def lexer(lines):
                         tl.append(["<drct_s>", upper_word])
                     elif(re.match(r'^.+:$',word)):
                         tl.append(["<lbl_def>", word])
+                    # tolerate hex format 0x12 or 0X34
                     elif(re.match(r'^(0X|0x)[0-9a-fA-F]+$', word)):
                         tl.append(["<hex_num>", word])
+                    # tolerate hex format #12
+                    elif(re.match(r'^(#)[0-9a-fA-F]+$', word)):
+                        word = re.sub(r'(#)', '', word)
+                        tl.append(["<hex_num>", f"0x{word}"])
+                    # tolerate hex format $12
+                    elif(re.match(r'^(\$)[0-9a-fA-F]+$', word)):
+                        word = re.sub(r'(\$)', '', word)
+                        tl.append(["<hex_num>", f"0x{word}"])
+                    # tolerate hex format 12h
+                    elif(re.match(r'^([0-9a-fA-F]+(H|h))$', word)):
+                        word = re.sub(r'(H|h)', '', word)
+                        tl.append(["<hex_num>", f"0x{word}"])
                     elif(re.match(r'^[0-9]+$', word)):
                         tl.append(["<dec_num>", word])
                     elif(re.match(r'^(0B|0b)[0-1]+$', word)):
