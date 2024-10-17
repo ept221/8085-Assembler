@@ -45,11 +45,15 @@ Constants are in decimal by default, but hexadecimal and binary are also support
 ```asm
 MVI A, 10     ; Decimal constant
 MVI A, 0x0A   ; Hexadecimal constant
-MVI A, 0AH    ; Hexadecimal constant
 MVI A, 0b1010 ; Binary constant
 MVI A, -10    ; Negative constant
 MVI A, 'a'    ; A character constant
-MVI A, '\n'   ; A character escape sequence constant 
+MVI A, '\n'   ; A character escape sequence constant
+
+; Retro formats:
+MVI A, 0AH    ; Hexadecimal constant
+MVI A, #12    ; Hexadecimal constant
+MVI A, $12    ; Hexadecimal constant
 ```
 
 ### Label Definitions
