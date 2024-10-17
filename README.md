@@ -45,6 +45,7 @@ Constants are in decimal by default, but hexadecimal and binary are also support
 ```asm
 MVI A, 10     ; Decimal constant
 MVI A, 0x0A   ; Hexadecimal constant
+MVI A, 0AH    ; Hexadecimal constant
 MVI A, 0b1010 ; Binary constant
 MVI A, -10    ; Negative constant
 MVI A, 'a'    ; A character constant
