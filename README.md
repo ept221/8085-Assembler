@@ -66,6 +66,21 @@ Label definitions may be any string ending with a colon, where the string does n
   0xFD: DCR A         ; Illegal. Label definition cannot match hex constant format
         JNZ 0xFD
 ```
+### Unofficial Instructions
+Some unofficial instructions such as `SHLD` are supported, and are allowed to be surrounded by parentheses:
+```asm
+; Example
+;*******************************************************************************
+        (SHLD) 0x76
+;*******************************************************************************
+
+Address             Label               Instruction         Hex Code                         
+--------------------------------------------------------------------------------
+0x0000                                  SHLD 0x76           0x22                                    
+0x0001                                                      0x76                                    
+0x0002                                                      0x00 
+```
+
 ### Directives
 #### ORG <16-bit-address>
 Sets the origin to the given address. Only forward movement of the origin is permitted.
