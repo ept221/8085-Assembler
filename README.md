@@ -78,10 +78,10 @@ Some unofficial instructions such as `SHLD` are supported, and are allowed to be
         (SHLD) 0x76
 ;*******************************************************************************
 
-Address             Label               Instruction         Hex Code                         
+Address             Label               Instruction         Hex Code            
 --------------------------------------------------------------------------------
-0x0000                                  SHLD 0x76           0x22                                    
-0x0001                                                      0x76                                    
+0x0000                                  SHLD 0x76           0x22                
+0x0001                                                      0x76                
 0x0002                                                      0x00 
 ```
 
